@@ -92,11 +92,13 @@ class PlayerViewModel: ObservableObject {
         playerService.seek(to: time)
     }
     
-    /// Switch playback mode
+    /// Switch playback mode while maintaining current playback position
     func switchMode(to mode: PlaybackMode) {
         guard let track = currentTrack, mode != playbackMode else { return }
+        // Capture current time before switching to preserve playback position
+        let currentSeekTime = currentTime
         selectedMode = mode
-        playerService.play(track, mode: mode)
+        playerService.play(track, mode: mode, seekTime: currentSeekTime)
     }
     
     // MARK: - Error Handling

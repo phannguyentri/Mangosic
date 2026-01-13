@@ -106,7 +106,11 @@ class AudioPlayerService: ObservableObject {
     // MARK: - Playback Control
     
     /// Play a track in the specified mode
-    func play(_ track: Track, mode: PlaybackMode) {
+    /// - Parameters:
+    ///   - track: The track to play
+    ///   - mode: The playback mode (audio/video)
+    ///   - seekTime: Optional time to seek to after playback starts (useful when switching modes)
+    func play(_ track: Track, mode: PlaybackMode, seekTime: TimeInterval? = nil) {
         let streamURL: URL?
         
         // Use video stream for both modes if available (audio-only streams have incorrect duration metadata)
@@ -132,7 +136,10 @@ class AudioPlayerService: ObservableObject {
         state = .loading
         currentTrack = track
         playbackMode = mode
-        currentTime = 0
+        // Only reset currentTime if not seeking to a specific time
+        if seekTime == nil {
+            currentTime = 0
+        }
         
         // Use cached duration if available (from previous play of same track)
         if let cached = cachedDuration[track.id], cached > 0 {
@@ -178,9 +185,20 @@ class AudioPlayerService: ObservableObject {
             .sink { [weak self] status in
                 switch status {
                 case .readyToPlay:
-                    self?.player?.play()
-                    self?.state = .playing
-                    self?.updateNowPlayingInfo()
+                    // Seek to specified time if provided (e.g., when switching modes)
+                    if let seekTo = seekTime, seekTo > 0 {
+                        let cmTime = CMTime(seconds: seekTo, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+                        self?.player?.seek(to: cmTime) { _ in
+                            self?.player?.play()
+                            self?.state = .playing
+                            self?.currentTime = seekTo
+                            self?.updateNowPlayingInfo()
+                        }
+                    } else {
+                        self?.player?.play()
+                        self?.state = .playing
+                        self?.updateNowPlayingInfo()
+                    }
                     
                     // Also try to get duration from playerItem when ready (for video mode)
                     if mode == .video, let item = self?.playerItem, item.duration.isNumeric {
