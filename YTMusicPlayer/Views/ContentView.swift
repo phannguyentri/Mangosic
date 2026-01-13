@@ -138,30 +138,34 @@ struct ContentView: View {
                 await viewModel.loadAndPlay()
             }
         } label: {
-            HStack {
+            HStack(spacing: 12) {
                 if viewModel.isLoading {
                     ProgressView()
-                        .tint(.white)
+                        .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                        .scaleEffect(1.1)
                 } else {
                     Image(systemName: "play.fill")
+                        .font(.system(size: 18, weight: .semibold))
                 }
                 Text(viewModel.isLoading ? "Loading..." : "Play")
+                    .font(.headline)
             }
-            .font(.headline)
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
-            .padding()
+            .padding(.vertical, 16)
             .background(
                 LinearGradient(
-                    colors: [.red, .pink],
+                    colors: viewModel.isLoading ? [.red.opacity(0.7), .pink.opacity(0.7)] : [.red, .pink],
                     startPoint: .leading,
                     endPoint: .trailing
                 )
             )
             .cornerRadius(12)
+            .shadow(color: viewModel.isLoading ? .clear : .red.opacity(0.4), radius: 8, y: 4)
         }
         .disabled(viewModel.urlInput.isEmpty || viewModel.isLoading)
         .opacity(viewModel.urlInput.isEmpty ? 0.6 : 1)
+        .animation(.easeInOut(duration: 0.2), value: viewModel.isLoading)
     }
     
     private var sampleVideosView: some View {
@@ -171,24 +175,49 @@ struct ContentView: View {
                 .foregroundColor(.gray)
             
             ForEach(viewModel.sampleURLs, id: \.1) { sample in
+                let isLoadingThisSample = viewModel.isLoading && viewModel.urlInput == sample.1
+                
                 Button {
                     Task {
                         await viewModel.playSample(sample.1)
                     }
                 } label: {
                     HStack {
-                        Image(systemName: "music.note")
-                            .foregroundColor(.red)
+                        if isLoadingThisSample {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: .red))
+                                .scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "music.note")
+                                .foregroundColor(.red)
+                        }
                         Text(sample.0)
                             .foregroundColor(.white)
                         Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundColor(.gray)
+                        if isLoadingThisSample {
+                            Text("Loading...")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        } else {
+                            Image(systemName: "chevron.right")
+                                .foregroundColor(.gray)
+                        }
                     }
                     .padding()
-                    .background(Color.white.opacity(0.05))
+                    .background(
+                        isLoadingThisSample 
+                            ? Color.red.opacity(0.1) 
+                            : Color.white.opacity(0.05)
+                    )
                     .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(isLoadingThisSample ? Color.red.opacity(0.3) : Color.clear, lineWidth: 1)
+                    )
                 }
+                .disabled(viewModel.isLoading)
+                .opacity(viewModel.isLoading && !isLoadingThisSample ? 0.5 : 1)
+                .animation(.easeInOut(duration: 0.2), value: isLoadingThisSample)
             }
         }
     }

@@ -11,6 +11,7 @@ class PlayerViewModel: ObservableObject {
     @Published var showingPlayer: Bool = false
     @Published var errorMessage: String?
     @Published var showError: Bool = false
+    @Published private(set) var isExtracting: Bool = false
     
     // MARK: - Services
     private let youtubeService = YouTubeService.shared
@@ -23,7 +24,7 @@ class PlayerViewModel: ObservableObject {
     var duration: TimeInterval { playerService.duration }
     var progress: Double { playerService.progress }
     var isPlaying: Bool { playerService.state.isPlaying }
-    var isLoading: Bool { playerService.state.isLoading }
+    var isLoading: Bool { isExtracting || playerService.state.isLoading }
     var playbackMode: PlaybackMode { playerService.playbackMode }
     
     // MARK: - Sample URLs for testing
@@ -43,11 +44,15 @@ class PlayerViewModel: ObservableObject {
             return
         }
         
+        isExtracting = true
+        
         do {
             let track = try await youtubeService.extractTrack(from: input)
+            isExtracting = false
             playerService.play(track, mode: selectedMode)
             showingPlayer = true
         } catch {
+            isExtracting = false
             showError(message: error.localizedDescription)
         }
     }
