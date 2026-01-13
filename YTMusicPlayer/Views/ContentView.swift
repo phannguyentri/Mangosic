@@ -7,13 +7,8 @@ struct ContentView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background gradient
-                LinearGradient(
-                    colors: [Color.black, Color(red: 0.1, green: 0.1, blue: 0.2)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
+                // Background
+                MangosicBackground()
                 
                 VStack(spacing: 24) {
                     // Logo and title
@@ -61,6 +56,7 @@ struct ContentView: View {
                 .scaledToFit()
                 .frame(width: 80, height: 80)
                 .cornerRadius(20)
+                .shadow(color: Theme.primaryEnd.opacity(0.3), radius: 10, x: 0, y: 5)
             
             Text("Mangosic")
                 .font(.title.bold())
@@ -81,7 +77,7 @@ struct ContentView: View {
             
             HStack {
                 Image(systemName: "link")
-                    .foregroundColor(.gray)
+                .foregroundColor(.gray)
                 
                 TextField("Paste URL or video ID", text: $viewModel.urlInput)
                     .textFieldStyle(.plain)
@@ -118,7 +114,7 @@ struct ContentView: View {
                     .padding(.vertical, 12)
                     .background(
                         viewModel.selectedMode == mode
-                            ? Color.red
+                            ? Theme.primaryEnd
                             : Color.white.opacity(0.1)
                     )
                     .foregroundColor(.white)
@@ -150,14 +146,12 @@ struct ContentView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(
-                LinearGradient(
-                    colors: viewModel.isLoading ? [.red.opacity(0.7), .pink.opacity(0.7)] : [.red, .pink],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
+                viewModel.isLoading 
+                    ? LinearGradient(colors: [Theme.primaryStart.opacity(0.7), Theme.primaryEnd.opacity(0.7)], startPoint: .topLeading, endPoint: .bottomTrailing)
+                    : Theme.primaryGradient
             )
             .cornerRadius(12)
-            .shadow(color: viewModel.isLoading ? .clear : .red.opacity(0.4), radius: 8, y: 4)
+            .shadow(color: viewModel.isLoading ? .clear : Theme.primaryEnd.opacity(0.4), radius: 8, y: 4)
         }
         .disabled(viewModel.urlInput.isEmpty || viewModel.isLoading)
         .opacity(viewModel.urlInput.isEmpty ? 0.6 : 1)
@@ -181,11 +175,11 @@ struct ContentView: View {
                     HStack {
                         if isLoadingThisSample {
                             ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: .red))
+                                .progressViewStyle(CircularProgressViewStyle(tint: Theme.primaryEnd))
                                 .scaleEffect(0.8)
                         } else {
                             Image(systemName: "music.note")
-                                .foregroundColor(.red)
+                                .foregroundColor(Theme.primaryEnd)
                         }
                         Text(sample.0)
                             .foregroundColor(.white)
@@ -202,13 +196,13 @@ struct ContentView: View {
                     .padding()
                     .background(
                         isLoadingThisSample 
-                            ? Color.red.opacity(0.1) 
+                            ? Theme.primaryEnd.opacity(0.1) 
                             : Color.white.opacity(0.05)
                     )
                     .cornerRadius(12)
                     .overlay(
                         RoundedRectangle(cornerRadius: 12)
-                            .stroke(isLoadingThisSample ? Color.red.opacity(0.3) : Color.clear, lineWidth: 1)
+                            .stroke(isLoadingThisSample ? Theme.primaryEnd.opacity(0.3) : Color.clear, lineWidth: 1)
                     )
                 }
                 .disabled(viewModel.isLoading)

@@ -9,7 +9,7 @@ struct PlayerView: View {
     var body: some View {
         ZStack {
             // Background
-            Color.black.ignoresSafeArea()
+            MangosicBackground()
             
             VStack(spacing: 0) {
                 // Video Player or Album Art
@@ -154,7 +154,7 @@ struct PlayerView: View {
                 ),
                 in: 0...1
             )
-            .tint(.red)
+            .tint(Theme.primaryEnd)
             
             // Time labels
             HStack {
@@ -189,16 +189,16 @@ struct PlayerView: View {
             } label: {
                 ZStack {
                     Circle()
-                        .fill(Color.white)
+                        .fill(Theme.primaryGradient)
                         .frame(width: 70, height: 70)
                     
                     if viewModel.isLoading {
                         ProgressView()
-                            .tint(.black)
+                            .tint(.white)
                     } else {
                         Image(systemName: viewModel.isPlaying ? "pause.fill" : "play.fill")
                             .font(.title)
-                            .foregroundColor(.black)
+                            .foregroundColor(.white)
                             .offset(x: viewModel.isPlaying ? 0 : 2)
                     }
                 }
@@ -232,7 +232,7 @@ struct PlayerView: View {
                     .padding(.vertical, 8)
                     .background(
                         viewModel.playbackMode == mode
-                            ? Color.red
+                            ? Theme.primaryEnd
                             : Color.white.opacity(0.1)
                     )
                     .foregroundColor(.white)
