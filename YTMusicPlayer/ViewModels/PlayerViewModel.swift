@@ -16,6 +16,18 @@ class PlayerViewModel: ObservableObject {
     // MARK: - Services
     private let youtubeService = YouTubeService.shared
     let playerService = AudioPlayerService.shared
+    private var cancellables = Set<AnyCancellable>()
+    
+    // MARK: - Initialization
+    init() {
+        // Subscribe to playerService changes to trigger UI updates
+        playerService.objectWillChange
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.objectWillChange.send()
+            }
+            .store(in: &cancellables)
+    }
     
     // MARK: - Computed Properties
     var currentTrack: Track? { playerService.currentTrack }
