@@ -20,13 +20,16 @@ struct PlayerView: View {
                     albumArtView
                 }
                 
-                // Track info and controls
-                VStack(spacing: 24) {
+                Spacer(minLength: 16)
+                
+                // Track info and controls - wrapped in a container with explicit bounds
+                VStack(spacing: 20) {
                     // Track info
                     trackInfoView
                     
                     // Progress bar
                     progressView
+                        .frame(maxWidth: .infinity)
                     
                     // Playback controls
                     controlsView
@@ -35,8 +38,10 @@ struct PlayerView: View {
                     modeSwitcher
                 }
                 .padding(.horizontal, 24)
-                .padding(.vertical, 20)
+                .padding(.bottom, 20)
+                .frame(maxWidth: .infinity)
             }
+            .padding(.horizontal, 0) // Ensure no extra padding on outer VStack
         }
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -67,12 +72,13 @@ struct PlayerView: View {
     private var albumArtView: some View {
         GeometryReader { geometry in
             ZStack {
-                // Blurred background
+                // Blurred background - constrained to geometry
                 if let thumbnailURL = viewModel.currentTrack?.thumbnailURL {
                     AsyncImage(url: thumbnailURL) { image in
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
+                            .frame(width: geometry.size.width, height: geometry.size.height)
                             .blur(radius: 50)
                             .opacity(0.5)
                     } placeholder: {
@@ -80,30 +86,48 @@ struct PlayerView: View {
                     }
                 }
                 
-                // Album art
+                // Album art - centered
                 if let thumbnailURL = viewModel.currentTrack?.thumbnailURL {
-                    AsyncImage(url: thumbnailURL) { image in
-                        image
-                            .resizable()
-                            .aspectRatio(contentMode: .fit)
-                            .frame(width: min(geometry.size.width - 60, 350))
-                            .cornerRadius(12)
-                            .shadow(color: .black.opacity(0.5), radius: 20)
-                    } placeholder: {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(width: 280, height: 280)
-                            .overlay {
-                                Image(systemName: "music.note")
-                                    .font(.system(size: 60))
-                                    .foregroundColor(.gray)
-                            }
+                    AsyncImage(url: thumbnailURL) { phase in
+                        switch phase {
+                        case .success(let image):
+                            image
+                                .resizable()
+                                .aspectRatio(contentMode: .fit)
+                                .frame(maxWidth: 280, maxHeight: 280)
+                                .cornerRadius(12)
+                                .shadow(color: .black.opacity(0.5), radius: 20)
+                        case .failure(_):
+                            albumArtPlaceholder
+                        case .empty:
+                            albumArtPlaceholder
+                                .overlay {
+                                    ProgressView()
+                                        .tint(.white)
+                                }
+                        @unknown default:
+                            albumArtPlaceholder
+                        }
                     }
+                } else {
+                    albumArtPlaceholder
                 }
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(width: geometry.size.width, height: geometry.size.height)
         }
-        .frame(maxHeight: 350)
+        .frame(height: 320)
+        .clipped()
+    }
+    
+    private var albumArtPlaceholder: some View {
+        RoundedRectangle(cornerRadius: 12)
+            .fill(Color.gray.opacity(0.3))
+            .frame(width: 280, height: 280)
+            .overlay {
+                Image(systemName: "music.note")
+                    .font(.system(size: 60))
+                    .foregroundColor(.gray)
+            }
     }
     
     private var trackInfoView: some View {
