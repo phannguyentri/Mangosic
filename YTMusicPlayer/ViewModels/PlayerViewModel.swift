@@ -95,9 +95,16 @@ class PlayerViewModel: ObservableObject {
     /// Switch playback mode while maintaining current playback position
     func switchMode(to mode: PlaybackMode) {
         guard let track = currentTrack, mode != playbackMode else { return }
-        // Capture current time before switching to preserve playback position
-        let currentSeekTime = currentTime
         selectedMode = mode
+        
+        // Try seamless switching first (works when both modes use the same stream)
+        if playerService.switchMode(to: mode) {
+            // Seamless switch succeeded, no reload needed
+            return
+        }
+        
+        // Fallback: reload with seekTime if streams are different
+        let currentSeekTime = currentTime
         playerService.play(track, mode: mode, seekTime: currentSeekTime)
     }
     

@@ -278,6 +278,42 @@ class AudioPlayerService: ObservableObject {
         updateNowPlayingInfo()
     }
     
+    /// Switch playback mode seamlessly without reloading the player
+    /// This works because both audio and video modes use the same video stream
+    /// - Parameter mode: The new playback mode
+    /// - Returns: true if mode was switched successfully, false if reload is needed
+    func switchMode(to mode: PlaybackMode) -> Bool {
+        guard let track = currentTrack, mode != playbackMode else { return true }
+        
+        // Check if we can switch seamlessly (same stream URL for both modes)
+        let currentStreamURL: URL?
+        let newStreamURL: URL?
+        
+        switch playbackMode {
+        case .audio:
+            currentStreamURL = track.videoStreamURL ?? track.audioStreamURL
+        case .video:
+            currentStreamURL = track.videoStreamURL ?? track.audioStreamURL
+        }
+        
+        switch mode {
+        case .audio:
+            newStreamURL = track.videoStreamURL ?? track.audioStreamURL
+        case .video:
+            newStreamURL = track.videoStreamURL ?? track.audioStreamURL
+        }
+        
+        // If using the same stream, just toggle the mode without reloading
+        if currentStreamURL == newStreamURL && player != nil && playerItem != nil {
+            playbackMode = mode
+            updateNowPlayingInfo()
+            return true
+        }
+        
+        // Different streams, need to reload
+        return false
+    }
+    
     /// Get the AVPlayer for video display
     func getPlayer() -> AVPlayer? {
         return player
