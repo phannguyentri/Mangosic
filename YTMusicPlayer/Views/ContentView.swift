@@ -56,17 +56,13 @@ struct ContentView: View {
     
     private var headerView: some View {
         VStack(spacing: 8) {
-            Image(systemName: "play.circle.fill")
-                .font(.system(size: 60))
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [.red, .pink],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-                )
+            Image("AppLogo")
+                .resizable()
+                .scaledToFit()
+                .frame(width: 80, height: 80)
+                .cornerRadius(20)
             
-            Text("YT Music Player")
+            Text("Mangosic")
                 .font(.title.bold())
                 .foregroundColor(.white)
             
