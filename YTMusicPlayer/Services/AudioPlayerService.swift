@@ -21,6 +21,7 @@ class AudioPlayerService: ObservableObject {
     private var playerItem: AVPlayerItem?
     private var timeObserver: Any?
     private var cancellables = Set<AnyCancellable>()
+    private var cachedDuration: [String: TimeInterval] = [:] // Cache duration by video ID
     
     var progress: Double {
         guard duration > 0 else { return 0 }
@@ -108,9 +109,12 @@ class AudioPlayerService: ObservableObject {
     func play(_ track: Track, mode: PlaybackMode) {
         let streamURL: URL?
         
+        // Use video stream for both modes if available (audio-only streams have incorrect duration metadata)
+        // AVPlayer will handle the audio extraction automatically
         switch mode {
         case .audio:
-            streamURL = track.audioStreamURL
+            // Prefer video stream for accurate duration, fallback to audio-only
+            streamURL = track.videoStreamURL ?? track.audioStreamURL
         case .video:
             streamURL = track.videoStreamURL ?? track.audioStreamURL
         }
@@ -120,9 +124,22 @@ class AudioPlayerService: ObservableObject {
             return
         }
         
+        // Cancel existing subscriptions before creating new ones
+        cancellables.removeAll()
+        removeTimeObserver()
+        
+        // Reset state for new playback
         state = .loading
         currentTrack = track
         playbackMode = mode
+        currentTime = 0
+        
+        // Use cached duration if available (from previous play of same track)
+        if let cached = cachedDuration[track.id], cached > 0 {
+            duration = cached
+        } else {
+            duration = 0
+        }
         
         // Create player item
         playerItem = AVPlayerItem(url: url)
@@ -134,15 +151,26 @@ class AudioPlayerService: ObservableObject {
             player?.replaceCurrentItem(with: playerItem)
         }
         
-        // Observe duration
-        playerItem?.publisher(for: \.duration)
-            .receive(on: DispatchQueue.main)
-            .sink { [weak self] cmTime in
-                if cmTime.isNumeric {
-                    self?.duration = CMTimeGetSeconds(cmTime)
+        // Load duration from AVAsset asynchronously (more reliable)
+        let trackId = track.id
+        Task { [weak self] in
+            do {
+                let asset = AVAsset(url: url)
+                let durationValue = try await asset.load(.duration)
+                if durationValue.isNumeric {
+                    let durationSeconds = CMTimeGetSeconds(durationValue)
+                    await MainActor.run {
+                        // Only update if we don't have a cached value or this is video mode (more accurate)
+                        if self?.cachedDuration[trackId] == nil || mode == .video {
+                            self?.duration = durationSeconds
+                            self?.cachedDuration[trackId] = durationSeconds
+                        }
+                    }
                 }
+            } catch {
+                print("Failed to load duration: \(error)")
             }
-            .store(in: &cancellables)
+        }
         
         // Observe status
         playerItem?.publisher(for: \.status)
@@ -153,6 +181,15 @@ class AudioPlayerService: ObservableObject {
                     self?.player?.play()
                     self?.state = .playing
                     self?.updateNowPlayingInfo()
+                    
+                    // Also try to get duration from playerItem when ready (for video mode)
+                    if mode == .video, let item = self?.playerItem, item.duration.isNumeric {
+                        let itemDuration = CMTimeGetSeconds(item.duration)
+                        if itemDuration > 0 {
+                            self?.duration = itemDuration
+                            self?.cachedDuration[trackId] = itemDuration
+                        }
+                    }
                 case .failed:
                     self?.state = .error(self?.playerItem?.error?.localizedDescription ?? "Playback failed")
                 default:
