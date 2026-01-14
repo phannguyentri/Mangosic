@@ -12,6 +12,9 @@ struct PlayerView: View {
             MangosicBackground()
             
             VStack(spacing: 0) {
+                // Top spacer to push content down and center vertically
+                Spacer(minLength: 20)
+                
                 // Video Player or Album Art
                 if viewModel.playbackMode == .video {
                     VideoPlayerView(player: viewModel.playerService.getPlayer())
@@ -50,7 +53,11 @@ struct PlayerView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "chevron.down")
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
+                        .frame(width: 40, height: 40)
+                        .background(Color.white.opacity(0.1))
+                        .clipShape(Circle())
                 }
             }
             
@@ -60,7 +67,11 @@ struct PlayerView: View {
                     dismiss()
                 } label: {
                     Image(systemName: "xmark")
+                        .font(.system(size: 18, weight: .semibold))
                         .foregroundColor(.white)
+                        .frame(width: 40, height: 40)
+                        .background(Color.white.opacity(0.1))
+                        .clipShape(Circle())
                 }
             }
         }
