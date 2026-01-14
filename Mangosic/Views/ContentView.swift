@@ -7,40 +7,44 @@ struct ContentView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack {
+            ZStack(alignment: .bottom) {
                 // Background
                 MangosicBackground()
                 
-                VStack(spacing: 24) {
-                    // Logo and title
-                    headerView
-                    
-                    // Search Button - Featured prominently
-                    searchButton
-                    
-                    // Divider with "or"
-                    orDivider
-                    
-                    // URL Input
-                    urlInputView
-                    
-                    // Mode selector
-                    modeSelector
-                    
-                    // Play button
-                    playButton
-                    
-                    // Sample videos
-                    sampleVideosView
-                    
-                    Spacer()
-                    
-                    // Now Playing Bar (shows when track is loaded)
-                    if viewModel.currentTrack != nil {
-                        NowPlayingBar(viewModel: viewModel)
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Logo and title
+                        headerView
+                        
+                        // Search Button - Featured prominently
+                        searchButton
+                        
+                        // Divider with "or"
+                        orDivider
+                        
+                        // URL Input
+                        urlInputView
+                        
+                        // Mode selector
+                        modeSelector
+                        
+                        // Play button
+                        playButton
+                        
+                        // Sample videos
+                        sampleVideosView
                     }
+                    .padding()
+                    .padding(.bottom, viewModel.currentTrack != nil ? 100 : 20)
                 }
-                .padding()
+                .scrollIndicators(.hidden)
+                
+                // Now Playing Bar (shows when track is loaded)
+                if viewModel.currentTrack != nil {
+                    NowPlayingBar(viewModel: viewModel)
+                        .padding(.horizontal)
+                        .padding(.bottom)
+                }
             }
             .navigationDestination(isPresented: $viewModel.showingPlayer) {
                 PlayerView(viewModel: viewModel)
