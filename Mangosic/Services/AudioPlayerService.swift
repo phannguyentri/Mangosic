@@ -244,22 +244,22 @@ class AudioPlayerService: ObservableObject {
                         self?.state = .playing
                         self?.updateNowPlayingInfo()
                     }
-                    
-                    // Also try to get duration from playerItem when ready (for video mode)
-                    if mode == .video, let item = self?.playerItem, item.duration.isNumeric {
-                        let itemDuration = CMTimeGetSeconds(item.duration)
-                        if itemDuration > 0 {
-                            self?.duration = itemDuration
-                            self?.cachedDuration[trackId] = itemDuration
-                        }
+                
+                // Also try to get duration from playerItem when ready (for video mode)
+                if mode == .video, let item = self?.playerItem, item.duration.isNumeric {
+                    let itemDuration = CMTimeGetSeconds(item.duration)
+                    if itemDuration > 0 {
+                        self?.duration = itemDuration
+                        self?.cachedDuration[trackId] = itemDuration
                     }
-                case .failed:
-                    self?.state = .error(self?.playerItem?.error?.localizedDescription ?? "Playback failed")
-                default:
-                    break
                 }
+            case .failed:
+                self?.state = .error(self?.playerItem?.error?.localizedDescription ?? "Playback failed")
+            default:
+                break
             }
-            .store(in: &cancellables)
+        }
+        .store(in: &cancellables)
         
         // Add time observer
         addTimeObserver()
@@ -270,8 +270,10 @@ class AudioPlayerService: ObservableObject {
         
         let interval = CMTime(seconds: 0.5, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
         timeObserver = player?.addPeriodicTimeObserver(forInterval: interval, queue: .main) { [weak self] time in
-            self?.currentTime = CMTimeGetSeconds(time)
-            self?.updateNowPlayingInfo()
+            Task { @MainActor [weak self] in
+                self?.currentTime = CMTimeGetSeconds(time)
+                self?.updateNowPlayingInfo()
+            }
         }
     }
     
@@ -403,7 +405,27 @@ class AudioPlayerService: ObservableObject {
         // Create composition asynchronously
         Task { [weak self] in
             do {
-                let composition = try await self?.createComposition(videoURL: videoURL, audioURL: audioURL)
+                var finalDuration = track.duration
+                
+                // If no metadata duration, try to get from reference combined stream (always reliable)
+                if finalDuration == nil, let referenceURL = track.videoStreamURL {
+                    print("ℹ️ Fetching reference duration from combined stream...")
+                     // Load reference asset to get true duration (progressive stream duration is reliable)
+                    let refAsset = AVURLAsset(url: referenceURL)
+                    if let refDuration = try? await refAsset.load(.duration) {
+                         let seconds = CMTimeGetSeconds(refDuration)
+                         if seconds > 0 {
+                             finalDuration = seconds
+                             print("✅ Reference duration found: \(seconds)s")
+                         }
+                    }
+                }
+                
+                let composition = try await self?.createComposition(
+                    videoURL: videoURL, 
+                    audioURL: audioURL,
+                    explicitDuration: finalDuration
+                )
                 
                 guard let composition = composition else {
                     await MainActor.run {
@@ -431,7 +453,11 @@ class AudioPlayerService: ObservableObject {
     }
     
     /// Create AVMutableComposition from video and audio assets
-    private func createComposition(videoURL: URL, audioURL: URL) async throws -> AVMutableComposition {
+    /// - Parameters:
+    ///   - videoURL: URL for video stream
+    ///   - audioURL: URL for audio stream
+    ///   - explicitDuration: Optional authoritative duration from metadata (to fix adaptive stream duration bugs)
+    private func createComposition(videoURL: URL, audioURL: URL, explicitDuration: TimeInterval? = nil) async throws -> AVMutableComposition {
         let videoAsset = AVURLAsset(url: videoURL)
         let audioAsset = AVURLAsset(url: audioURL)
         
@@ -447,13 +473,28 @@ class AudioPlayerService: ObservableObject {
             throw NSError(domain: "AudioPlayerService", code: 2, userInfo: [NSLocalizedDescriptionKey: "No audio track found"])
         }
         
-        // Get durations
-        let videoDuration = try await videoAsset.load(.duration)
-        let audioDuration = try await audioAsset.load(.duration)
+        // Get track info first (more reliable than asset duration for streams)
+        let videoTrackRange = try await videoTrack.load(.timeRange)
+        let audioTrackRange = try await audioTrack.load(.timeRange)
         
-        // Use the shorter duration to avoid playback issues
-        let duration = CMTimeMinimum(videoDuration, audioDuration)
-        let timeRange = CMTimeRange(start: .zero, duration: duration)
+        print("📊 Track Ranges - Video: \(CMTimeGetSeconds(videoTrackRange.duration))s (start: \(CMTimeGetSeconds(videoTrackRange.start))s)")
+        print("                  Audio: \(CMTimeGetSeconds(audioTrackRange.duration))s (start: \(CMTimeGetSeconds(audioTrackRange.start))s)")
+        
+        // Determine composition duration
+        // Priority 1: Explicit metadata duration (most reliable)
+        // Priority 2: Intersection of track durations
+        var compositionDuration_calc: CMTime
+        
+        if let explicitSeconds = explicitDuration, explicitSeconds > 0 {
+            print("💎 Using explicit metadata duration: \(explicitSeconds)s")
+            compositionDuration_calc = CMTime(seconds: explicitSeconds, preferredTimescale: 600)
+        } else {
+             compositionDuration_calc = CMTimeMinimum(videoTrackRange.duration, audioTrackRange.duration)
+        }
+        
+        let compositionDuration = compositionDuration_calc
+        
+        print("✂️ Trimming composition to: \(CMTimeGetSeconds(compositionDuration))s")
         
         // Create composition
         let composition = AVMutableComposition()
@@ -466,7 +507,12 @@ class AudioPlayerService: ObservableObject {
             throw NSError(domain: "AudioPlayerService", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to create video track"])
         }
         
-        try compositionVideoTrack.insertTimeRange(timeRange, of: videoTrack, at: .zero)
+        // Insert exact time range from source track
+        try compositionVideoTrack.insertTimeRange(
+            CMTimeRange(start: videoTrackRange.start, duration: compositionDuration), 
+            of: videoTrack, 
+            at: .zero
+        )
         
         // Add audio track to composition
         guard let compositionAudioTrack = composition.addMutableTrack(
@@ -476,9 +522,17 @@ class AudioPlayerService: ObservableObject {
             throw NSError(domain: "AudioPlayerService", code: 4, userInfo: [NSLocalizedDescriptionKey: "Failed to create audio track"])
         }
         
-        try compositionAudioTrack.insertTimeRange(timeRange, of: audioTrack, at: .zero)
+        try compositionAudioTrack.insertTimeRange(
+            CMTimeRange(start: audioTrackRange.start, duration: compositionDuration), 
+            of: audioTrack, 
+            at: .zero
+        )
         
-        print("✅ Composition created: duration=\(CMTimeGetSeconds(duration))s")
+        print("✅ Composition created.")
+        print("   - Video Duration: \(CMTimeGetSeconds(videoTrackRange.duration))s")
+        print("   - Audio Duration: \(CMTimeGetSeconds(audioTrackRange.duration))s")
+        print("   - Target Duration: \(CMTimeGetSeconds(compositionDuration))s")
+        print("   - Final Composition Duration: \(CMTimeGetSeconds(composition.duration))s")
         
         return composition
     }
@@ -497,38 +551,44 @@ class AudioPlayerService: ObservableObject {
         
         // Cache duration
         let trackId = track.id
-        let durationSeconds = CMTimeGetSeconds(composition.duration)
-        if durationSeconds > 0 {
-            duration = durationSeconds
-            cachedDuration[trackId] = durationSeconds
+        let compositionDuration = CMTimeGetSeconds(composition.duration)
+        
+        print("▶️ Play Composition: duration=\(compositionDuration)s")
+        
+        if compositionDuration > 0 {
+            duration = compositionDuration
+            cachedDuration[trackId] = compositionDuration
         }
         
         // Observe status
         playerItem.publisher(for: \.status)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] status in
-                switch status {
-                case .readyToPlay:
-                    if let seekTo = seekTime, seekTo > 0 {
-                        let cmTime = CMTime(seconds: seekTo, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-                        self?.player?.seek(to: cmTime) { _ in
-                            self?.player?.play()
-                            self?.state = .playing
-                            self?.currentTime = seekTo
-                            self?.updateNowPlayingInfo()
+                Task { @MainActor [weak self] in
+                    guard let self = self else { return }
+                    switch status {
+                    case .readyToPlay:
+                        if let seekTo = seekTime, seekTo > 0 {
+                            let cmTime = CMTime(seconds: seekTo, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+                            self.player?.seek(to: cmTime) { _ in
+                                self.player?.play()
+                                self.state = .playing
+                                self.currentTime = seekTo
+                                self.updateNowPlayingInfo()
+                            }
+                        } else {
+                            self.player?.play()
+                            self.state = .playing
+                            self.updateNowPlayingInfo()
                         }
-                    } else {
-                        self?.player?.play()
-                        self?.state = .playing
-                        self?.updateNowPlayingInfo()
+                    case .failed:
+                        self.state = .error(self.playerItem?.error?.localizedDescription ?? "Composition playback failed")
+                    default:
+                        break
                     }
-                case .failed:
-                    self?.state = .error(self?.playerItem?.error?.localizedDescription ?? "Composition playback failed")
-                default:
-                    break
                 }
             }
-            .store(in: &cancellables)
+        .store(in: &cancellables)
         
         // Add time observer
         addTimeObserver()

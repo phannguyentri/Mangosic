@@ -44,6 +44,8 @@ class YouTubeService: ObservableObject {
         var title = "YouTube Video"
         var author = "YouTube"
         var thumbnailURL: URL? = URL(string: "https://img.youtube.com/vi/\(videoID)/maxresdefault.jpg")
+
+        
         
         // Try to get title and thumbnail from YouTubeKit metadata
         do {
@@ -54,6 +56,15 @@ class YouTubeService: ObservableObject {
                 if let metaThumbnail = metadata.thumbnail {
                     thumbnailURL = metaThumbnail.url
                 }
+                
+                // Try to get duration (lengthSeconds is common in YouTube metadata)
+                // Note: YouTubeKit metadata might not expose lengthSeconds directly publicly
+                // TODO: Find correct property for duration
+                /*
+                 if let lengthSeconds = metadata.lengthSeconds {
+                     videoDuration = TimeInterval(lengthSeconds)
+                 }
+                 */
             }
         } catch {
             print("⚠️ Failed to fetch YouTubeKit metadata: \(error.localizedDescription)")
