@@ -140,6 +140,16 @@ class AudioPlayerService: ObservableObject {
     ///   - mode: The playback mode (audio/video)
     ///   - seekTime: Optional time to seek to after playback starts (useful when switching modes)
     func play(_ track: Track, mode: PlaybackMode, seekTime: TimeInterval? = nil) {
+        // Check if we should use adaptive streaming (video-only + audio mixing)
+        if mode == .video && track.isAdaptiveStream,
+           let videoURL = track.videoOnlyStreamURL,
+           let audioURL = track.separateAudioURL {
+            print("🎬 Using adaptive streaming for high-res playback")
+            playMixedStreams(track: track, videoURL: videoURL, audioURL: audioURL, seekTime: seekTime)
+            return
+        }
+        
+        // Standard playback with combined stream
         let streamURL: URL?
         
         // Use video stream for both modes if available (audio-only streams have incorrect duration metadata)
@@ -156,6 +166,12 @@ class AudioPlayerService: ObservableObject {
             state = .error("No stream available for \(mode.rawValue) mode")
             return
         }
+        
+        playStandardStream(track: track, url: url, mode: mode, seekTime: seekTime)
+    }
+    
+    /// Play standard combined stream (for <=720p)
+    private func playStandardStream(track: Track, url: URL, mode: PlaybackMode, seekTime: TimeInterval?) {
         
         // Cancel existing subscriptions before creating new ones
         cancellables.removeAll()
@@ -356,5 +372,167 @@ class AudioPlayerService: ObservableObject {
     /// Get the AVPlayer for video display
     func getPlayer() -> AVPlayer? {
         return player
+    }
+    
+    // MARK: - Adaptive Stream Mixing (1080p+)
+    
+    /// Play high-resolution video by mixing video-only and audio-only streams
+    private func playMixedStreams(track: Track, videoURL: URL, audioURL: URL, seekTime: TimeInterval?) {
+        // Cancel existing subscriptions before creating new ones
+        cancellables.removeAll()
+        removeTimeObserver()
+        
+        // Reset state for new playback
+        state = .loading
+        currentTrack = track
+        playbackMode = .video
+        if seekTime == nil {
+            currentTime = 0
+        }
+        
+        // Use cached duration if available
+        if let cached = cachedDuration[track.id], cached > 0 {
+            duration = cached
+        } else {
+            duration = 0
+        }
+        
+        print("🔄 Creating composition for video: \(videoURL)")
+        print("🔄 Creating composition for audio: \(audioURL)")
+        
+        // Create composition asynchronously
+        Task { [weak self] in
+            do {
+                let composition = try await self?.createComposition(videoURL: videoURL, audioURL: audioURL)
+                
+                guard let composition = composition else {
+                    await MainActor.run {
+                        self?.state = .error("Failed to create composition")
+                    }
+                    return
+                }
+                
+                await MainActor.run {
+                    self?.playComposition(composition, track: track, seekTime: seekTime)
+                }
+            } catch {
+                print("❌ Composition error: \(error)")
+                await MainActor.run {
+                    // Fallback to combined stream if composition fails
+                    if let fallbackURL = track.videoStreamURL {
+                        print("⚠️ Falling back to combined stream")
+                        self?.playStandardStream(track: track, url: fallbackURL, mode: .video, seekTime: seekTime)
+                    } else {
+                        self?.state = .error("Failed to create high-res stream: \(error.localizedDescription)")
+                    }
+                }
+            }
+        }
+    }
+    
+    /// Create AVMutableComposition from video and audio assets
+    private func createComposition(videoURL: URL, audioURL: URL) async throws -> AVMutableComposition {
+        let videoAsset = AVURLAsset(url: videoURL)
+        let audioAsset = AVURLAsset(url: audioURL)
+        
+        // Load tracks from both assets
+        let videoTracks = try await videoAsset.loadTracks(withMediaType: .video)
+        let audioTracks = try await audioAsset.loadTracks(withMediaType: .audio)
+        
+        guard let videoTrack = videoTracks.first else {
+            throw NSError(domain: "AudioPlayerService", code: 1, userInfo: [NSLocalizedDescriptionKey: "No video track found"])
+        }
+        
+        guard let audioTrack = audioTracks.first else {
+            throw NSError(domain: "AudioPlayerService", code: 2, userInfo: [NSLocalizedDescriptionKey: "No audio track found"])
+        }
+        
+        // Get durations
+        let videoDuration = try await videoAsset.load(.duration)
+        let audioDuration = try await audioAsset.load(.duration)
+        
+        // Use the shorter duration to avoid playback issues
+        let duration = CMTimeMinimum(videoDuration, audioDuration)
+        let timeRange = CMTimeRange(start: .zero, duration: duration)
+        
+        // Create composition
+        let composition = AVMutableComposition()
+        
+        // Add video track to composition
+        guard let compositionVideoTrack = composition.addMutableTrack(
+            withMediaType: .video,
+            preferredTrackID: kCMPersistentTrackID_Invalid
+        ) else {
+            throw NSError(domain: "AudioPlayerService", code: 3, userInfo: [NSLocalizedDescriptionKey: "Failed to create video track"])
+        }
+        
+        try compositionVideoTrack.insertTimeRange(timeRange, of: videoTrack, at: .zero)
+        
+        // Add audio track to composition
+        guard let compositionAudioTrack = composition.addMutableTrack(
+            withMediaType: .audio,
+            preferredTrackID: kCMPersistentTrackID_Invalid
+        ) else {
+            throw NSError(domain: "AudioPlayerService", code: 4, userInfo: [NSLocalizedDescriptionKey: "Failed to create audio track"])
+        }
+        
+        try compositionAudioTrack.insertTimeRange(timeRange, of: audioTrack, at: .zero)
+        
+        print("✅ Composition created: duration=\(CMTimeGetSeconds(duration))s")
+        
+        return composition
+    }
+    
+    /// Play the composed asset
+    private func playComposition(_ composition: AVMutableComposition, track: Track, seekTime: TimeInterval?) {
+        let playerItem = AVPlayerItem(asset: composition)
+        self.playerItem = playerItem
+        
+        // Create or reuse player
+        if player == nil {
+            player = AVPlayer(playerItem: playerItem)
+        } else {
+            player?.replaceCurrentItem(with: playerItem)
+        }
+        
+        // Cache duration
+        let trackId = track.id
+        let durationSeconds = CMTimeGetSeconds(composition.duration)
+        if durationSeconds > 0 {
+            duration = durationSeconds
+            cachedDuration[trackId] = durationSeconds
+        }
+        
+        // Observe status
+        playerItem.publisher(for: \.status)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] status in
+                switch status {
+                case .readyToPlay:
+                    if let seekTo = seekTime, seekTo > 0 {
+                        let cmTime = CMTime(seconds: seekTo, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
+                        self?.player?.seek(to: cmTime) { _ in
+                            self?.player?.play()
+                            self?.state = .playing
+                            self?.currentTime = seekTo
+                            self?.updateNowPlayingInfo()
+                        }
+                    } else {
+                        self?.player?.play()
+                        self?.state = .playing
+                        self?.updateNowPlayingInfo()
+                    }
+                case .failed:
+                    self?.state = .error(self?.playerItem?.error?.localizedDescription ?? "Composition playback failed")
+                default:
+                    break
+                }
+            }
+            .store(in: &cancellables)
+        
+        // Add time observer
+        addTimeObserver()
+        
+        print("▶️ Started playing composition at \(track.resolution ?? "unknown") resolution")
     }
 }

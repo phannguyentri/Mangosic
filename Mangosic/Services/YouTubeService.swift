@@ -74,11 +74,18 @@ class YouTubeService: ObservableObject {
         // Get best audio stream based on quality preference
         let bestAudioStream = selectAudioStream(from: streams, preferredQuality: qualitySettings.audioQuality)
         
-        // Get best video stream based on quality preference
-        let bestVideoStream = selectVideoStream(from: streams, preferredQuality: qualitySettings.videoQuality)
+        // Get video streams - both combined and adaptive
+        let (combinedVideoStream, adaptiveVideoStream) = selectVideoStreams(from: streams, preferredQuality: qualitySettings.videoQuality)
+        
+        // Determine which stream to use
+        let useAdaptive = adaptiveVideoStream != nil && 
+            (adaptiveVideoStream?.videoResolution ?? 0) > (combinedVideoStream?.videoResolution ?? 0)
         
         // Convert resolution to string format (e.g., "720p")
-        let resolutionString: String? = bestVideoStream?.videoResolution.map { "\($0)p" }
+        let selectedResolution = useAdaptive ? adaptiveVideoStream?.videoResolution : combinedVideoStream?.videoResolution
+        let resolutionString: String? = selectedResolution.flatMap { $0 }.map { "\($0)p" }
+        
+        print("🎯 Stream selection: useAdaptive=\(useAdaptive), resolution=\(resolutionString ?? "nil")")
         
         return Track(
             id: videoID,
@@ -87,7 +94,9 @@ class YouTubeService: ObservableObject {
             thumbnailURL: thumbnailURL,
             duration: nil, // Duration not available from YouTubeKit metadata
             audioStreamURL: bestAudioStream?.url,
-            videoStreamURL: bestVideoStream?.url,
+            videoStreamURL: combinedVideoStream?.url,
+            videoOnlyStreamURL: useAdaptive ? adaptiveVideoStream?.url : nil,
+            separateAudioURL: useAdaptive ? bestAudioStream?.url : nil,
             resolution: resolutionString
         )
     }
@@ -97,6 +106,12 @@ class YouTubeService: ObservableObject {
     /// Select audio stream based on preferred quality
     private func selectAudioStream(from streams: [YTStream], preferredQuality: AudioQuality) -> YTStream? {
         let audioStreams = streams.filterAudioOnly()
+        
+        // Debug: Log available audio streams
+        print("🎵 Available audio streams: \(audioStreams.count)")
+        for stream in audioStreams {
+            print("   - \(stream.fileExtension.rawValue) @ \(stream.averageBitrate ?? 0) bps")
+        }
         
         // Prefer m4a format
         let m4aStreams = audioStreams.filter { $0.fileExtension == .m4a }
@@ -116,33 +131,55 @@ class YouTubeService: ObservableObject {
         }
     }
     
-    /// Select video stream based on preferred quality
-    private func selectVideoStream(from streams: [YTStream], preferredQuality: VideoQuality) -> YTStream? {
-        // Filter for playable combined streams
-        let combinedStreams = streams
-            .filter { $0.includesVideoAndAudioTrack && $0.isNativelyPlayable }
+    /// Select video streams - returns both combined (progressive) and adaptive (video-only) streams
+    /// - Returns: Tuple of (combinedStream, adaptiveStream) - adaptive is for 1080p+
+    private func selectVideoStreams(from streams: [YTStream], preferredQuality: VideoQuality) -> (combined: YTStream?, adaptive: YTStream?) {
+        // Separate combined (progressive) and video-only (adaptive/DASH) streams
+        let allVideoStreams = streams.filter { $0.includesVideoTrack }
+        let combinedStreams = allVideoStreams.filter { $0.includesVideoAndAudioTrack && $0.isNativelyPlayable }
+        let videoOnlyStreams = allVideoStreams.filter { !$0.includesAudioTrack && $0.isNativelyPlayable }
         
-        // Fallback to any video+audio streams if no natively playable found
-        let targetStreams = combinedStreams.isEmpty
-            ? streams.filter { $0.includesVideoAndAudioTrack }
-            : combinedStreams
+        print("📹 Combined streams: \(combinedStreams.count) | Adaptive streams: \(videoOnlyStreams.count)")
         
+        // Get target resolution
+        let targetHeight: Int?
         switch preferredQuality {
-        case .auto:
-            return targetStreams.highestResolutionStream()
-        case .p360:
-            return findClosestResolution(in: targetStreams, targetHeight: 360)
-        case .p480:
-            return findClosestResolution(in: targetStreams, targetHeight: 480)
-        case .p720:
-            return findClosestResolution(in: targetStreams, targetHeight: 720)
-        case .p1080:
-            return findClosestResolution(in: targetStreams, targetHeight: 1080)
-        case .p1440:
-            return findClosestResolution(in: targetStreams, targetHeight: 1440)
-        case .p4K:
-            return findClosestResolution(in: targetStreams, targetHeight: 2160)
+        case .auto: targetHeight = nil  // Will pick highest
+        case .p360: targetHeight = 360
+        case .p480: targetHeight = 480
+        case .p720: targetHeight = 720
+        case .p1080: targetHeight = 1080
+        case .p1440: targetHeight = 1440
+        case .p4K: targetHeight = 2160
         }
+        
+        // Select best combined stream (fallback, max ~720p usually)
+        let combinedStream: YTStream?
+        if let target = targetHeight {
+            combinedStream = findClosestResolution(in: combinedStreams, targetHeight: target)
+        } else {
+            combinedStream = combinedStreams.highestResolutionStream()
+        }
+        
+        // Select adaptive stream if requesting higher resolution (>= 1080p)
+        var adaptiveStream: YTStream? = nil
+        if let target = targetHeight, target >= 1080 {
+            // Try to find exact or closest adaptive stream
+            adaptiveStream = findClosestResolution(in: videoOnlyStreams, targetHeight: target)
+                ?? videoOnlyStreams.highestResolutionStream()
+        } else if targetHeight == nil {
+            // Auto mode: pick highest adaptive if > combined
+            let highestAdaptive = videoOnlyStreams.highestResolutionStream()
+            let combinedRes = combinedStream?.videoResolution ?? 0
+            let adaptiveRes = highestAdaptive?.videoResolution ?? 0
+            if adaptiveRes > combinedRes {
+                adaptiveStream = highestAdaptive
+            }
+        }
+        
+        print("📊 Combined: \(combinedStream?.videoResolution ?? 0)p | Adaptive: \(adaptiveStream?.videoResolution ?? 0)p | Requested: \(preferredQuality.rawValue)")
+        
+        return (combinedStream, adaptiveStream)
     }
     
     /// Find stream closest to target resolution (preferring lower if exact not found)

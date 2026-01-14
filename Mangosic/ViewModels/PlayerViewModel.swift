@@ -73,6 +73,8 @@ class PlayerViewModel: ObservableObject {
                     duration: track.duration,
                     audioStreamURL: track.audioStreamURL,
                     videoStreamURL: track.videoStreamURL,
+                    videoOnlyStreamURL: track.videoOnlyStreamURL,
+                    separateAudioURL: track.separateAudioURL,
                     resolution: track.resolution
                 )
             }

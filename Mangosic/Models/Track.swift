@@ -8,9 +8,19 @@ struct Track: Identifiable {
     let thumbnailURL: URL?
     let duration: TimeInterval?
     
-    // Stream URLs
+    // Stream URLs - Combined (progressive) streams
     let audioStreamURL: URL?
     let videoStreamURL: URL?
+    
+    // Adaptive streaming (for 1080p+)
+    // Video-only stream URL for high resolution (requires mixing with audio)
+    let videoOnlyStreamURL: URL?
+    // Separate audio stream URL to mix with video-only
+    let separateAudioURL: URL?
+    // Whether this track uses adaptive (separate video+audio) streaming
+    var isAdaptiveStream: Bool {
+        videoOnlyStreamURL != nil && separateAudioURL != nil
+    }
     
     // Video info
     let resolution: String?
@@ -22,8 +32,18 @@ struct Track: Identifiable {
         return String(format: "%d:%02d", minutes, seconds)
     }
     
-    var hasAudio: Bool { audioStreamURL != nil }
-    var hasVideo: Bool { videoStreamURL != nil }
+    var hasAudio: Bool { audioStreamURL != nil || separateAudioURL != nil }
+    var hasVideo: Bool { videoStreamURL != nil || videoOnlyStreamURL != nil }
+    
+    /// Get the best video URL (prefers high-res adaptive stream)
+    var bestVideoURL: URL? {
+        videoOnlyStreamURL ?? videoStreamURL
+    }
+    
+    /// Get the best audio URL
+    var bestAudioURL: URL? {
+        separateAudioURL ?? audioStreamURL
+    }
 }
 
 /// Playback mode

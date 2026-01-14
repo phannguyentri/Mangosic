@@ -20,6 +20,8 @@ struct SearchResult: Identifiable, Equatable {
             duration: nil,
             audioStreamURL: nil,
             videoStreamURL: nil,
+            videoOnlyStreamURL: nil,
+            separateAudioURL: nil,
             resolution: nil
         )
     }
