@@ -108,15 +108,21 @@ struct ContentView: View {
             .foregroundColor(.white)
             .padding(.horizontal, 20)
             .padding(.vertical, 16)
-            .background(
-                LinearGradient(
-                    colors: [Theme.primaryStart.opacity(0.9), Theme.primaryEnd.opacity(0.9)],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            )
+            .background(Color.white.opacity(0.05))
             .cornerRadius(16)
-            .shadow(color: Theme.primaryEnd.opacity(0.4), radius: 12, y: 6)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(
+                        LinearGradient(
+                            colors: [Theme.primaryStart, Theme.primaryEnd],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ),
+                        lineWidth: 1.5
+                    )
+                    .shadow(color: Theme.primaryEnd.opacity(0.5), radius: 4, x: 0, y: 0)
+            )
+            .shadow(color: Theme.primaryEnd.opacity(0.1), radius: 8, y: 4)
         }
         .buttonStyle(ScaleButtonStyle())
     }
