@@ -26,11 +26,43 @@ class YouTubeService: ObservableObject {
         
         let video = YouTube(videoID: videoID)
         
-        // Fetch streams
-        let streams = try await video.streams
+        // Fetch streams, metadata, and oEmbed concurrently for better performance
+        async let streamsTask = video.streams
+        async let metadataTask = video.metadata
+        async let oEmbedTask = fetchOEmbedInfo(videoID: videoID)
+        
+        let streams = try await streamsTask
         
         guard !streams.isEmpty else {
             throw YouTubeError.noStreamsFound
+        }
+        
+        // Default values
+        var title = "YouTube Video"
+        var author = "YouTube"
+        var thumbnailURL: URL? = URL(string: "https://img.youtube.com/vi/\(videoID)/maxresdefault.jpg")
+        
+        // Try to get title and thumbnail from YouTubeKit metadata
+        do {
+            if let metadata = try await metadataTask {
+                title = metadata.title
+                
+                // Use thumbnail from metadata if available
+                if let metaThumbnail = metadata.thumbnail {
+                    thumbnailURL = metaThumbnail.url
+                }
+            }
+        } catch {
+            print("⚠️ Failed to fetch YouTubeKit metadata: \(error.localizedDescription)")
+        }
+        
+        // Try to get author from oEmbed API
+        if let oEmbedInfo = await oEmbedTask {
+            author = oEmbedInfo.authorName
+            // oEmbed also provides title as fallback
+            if title == "YouTube Video" {
+                title = oEmbedInfo.title
+            }
         }
         
         // Get best audio stream (audio only, prefer m4a)
@@ -51,24 +83,45 @@ class YouTubeService: ObservableObject {
                 .filter { $0.includesVideoTrack }
                 .highestResolutionStream()
         
-        // Build thumbnail URL from video ID
-        let thumbnailURL = URL(string: "https://img.youtube.com/vi/\(videoID)/maxresdefault.jpg")
-        
-        // We don't have direct access to title/author from streams
-        // Use video ID as identifier, the actual title could be fetched separately
-        let title = "YouTube Video"
-        let author = "YouTube"
-        
         return Track(
             id: videoID,
             title: title,
             author: author,
             thumbnailURL: thumbnailURL,
-            duration: nil,
+            duration: nil, // Duration not available from YouTubeKit metadata
             audioStreamURL: bestAudioStream?.url,
             videoStreamURL: bestVideoStream?.url,
             resolution: nil
         )
+    }
+    
+    // MARK: - oEmbed API
+    
+    /// oEmbed response structure
+    private struct OEmbedInfo {
+        let title: String
+        let authorName: String
+    }
+    
+    /// Fetch video info from YouTube oEmbed API (free, no API key required)
+    private func fetchOEmbedInfo(videoID: String) async -> OEmbedInfo? {
+        let urlString = "https://www.youtube.com/oembed?url=https://youtube.com/watch?v=\(videoID)&format=json"
+        
+        guard let url = URL(string: urlString) else { return nil }
+        
+        do {
+            let (data, _) = try await URLSession.shared.data(from: url)
+            
+            if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                let title = json["title"] as? String ?? "YouTube Video"
+                let authorName = json["author_name"] as? String ?? "YouTube"
+                return OEmbedInfo(title: title, authorName: authorName)
+            }
+        } catch {
+            print("⚠️ Failed to fetch oEmbed info: \(error.localizedDescription)")
+        }
+        
+        return nil
     }
     
     /// Extract video ID from various YouTube URL formats
