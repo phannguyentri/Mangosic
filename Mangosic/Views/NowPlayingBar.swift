@@ -7,18 +7,28 @@ struct NowPlayingBar: View {
     var body: some View {
         HStack(spacing: 12) {
             // Thumbnail
-            if let thumbnailURL = viewModel.currentTrack?.thumbnailURL {
-                AsyncImage(url: thumbnailURL) { image in
+            // Thumbnail
+            AsyncImage(url: viewModel.currentTrack?.thumbnailURL, transaction: Transaction(animation: .easeInOut)) { phase in
+                switch phase {
+                case .success(let image):
                     image
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                } placeholder: {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.gray.opacity(0.3))
+                case .failure:
+                    thumbnailPlaceholder
+                case .empty:
+                    thumbnailPlaceholder
+                        .overlay(
+                            ProgressView()
+                                .scaleEffect(0.7)
+                                .tint(.gray)
+                        )
+                @unknown default:
+                    thumbnailPlaceholder
                 }
-                .frame(width: 48, height: 48)
-                .cornerRadius(6)
             }
+            .frame(width: 48, height: 48)
+            .cornerRadius(6)
             
             // Track info
             VStack(alignment: .leading, spacing: 2) {
@@ -56,6 +66,16 @@ struct NowPlayingBar: View {
         .onTapGesture {
             viewModel.showingPlayer = true
         }
+    }
+    
+    private var thumbnailPlaceholder: some View {
+        RoundedRectangle(cornerRadius: 6)
+            .fill(Color.gray.opacity(0.3))
+            .overlay(
+                Image(systemName: "music.note")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            )
     }
 }
 

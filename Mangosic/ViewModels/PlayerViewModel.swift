@@ -50,7 +50,8 @@ class PlayerViewModel: ObservableObject {
     // MARK: - Actions
     
     /// Load and play from URL or video ID
-    func loadAndPlay() async {
+    /// - Parameter searchResult: Optional search result metadata to use instead of extracting from scratch
+    func loadAndPlay(searchResult: SearchResult? = nil) async {
         let input = urlInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !input.isEmpty else {
             showError(message: "Please enter a YouTube URL or video ID")
@@ -60,7 +61,22 @@ class PlayerViewModel: ObservableObject {
         isExtracting = true
         
         do {
-            let track = try await youtubeService.extractTrack(from: input)
+            var track = try await youtubeService.extractTrack(from: input)
+            
+            // If we have search result metadata, use it to improve the track info
+            if let result = searchResult {
+                track = Track(
+                    id: track.id,
+                    title: result.title,
+                    author: result.author,
+                    thumbnailURL: result.thumbnailURL ?? track.thumbnailURL, // Prefer search thumbnail
+                    duration: track.duration,
+                    audioStreamURL: track.audioStreamURL,
+                    videoStreamURL: track.videoStreamURL,
+                    resolution: track.resolution
+                )
+            }
+            
             isExtracting = false
             playerService.play(track, mode: selectedMode)
             showingPlayer = true

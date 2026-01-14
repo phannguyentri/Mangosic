@@ -142,7 +142,7 @@ class SearchViewModel: ObservableObject {
     func playResult(_ result: SearchResult, playerViewModel: PlayerViewModel) async {
         // Set URL input and trigger play
         playerViewModel.urlInput = result.id
-        await playerViewModel.loadAndPlay()
+        await playerViewModel.loadAndPlay(searchResult: result)
     }
     
     // MARK: - Recent Searches
