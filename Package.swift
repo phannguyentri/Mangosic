@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "YTMusicPlayer",
+    name: "Mangosic",
     platforms: [
         .iOS(.v17)
     ],
@@ -11,9 +11,9 @@ let package = Package(
     ],
     targets: [
         .target(
-            name: "YTMusicPlayer",
+            name: "Mangosic",
             dependencies: ["YouTubeKit"],
-            path: "YTMusicPlayer"
+            path: "Mangosic"
         )
     ]
 )

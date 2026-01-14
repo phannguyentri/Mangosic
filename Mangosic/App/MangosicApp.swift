@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct YTMusicPlayerApp: App {
+struct MangosicApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()

@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		116824AC2F166BF500C74966 /* YouTubeKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2D0000090000000000000001 /* YouTubeKit */; };
-		2D0000010000000000000001 /* YTMusicPlayerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000001 /* YTMusicPlayerApp.swift */; };
+		2D0000010000000000000001 /* MangosicApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000001 /* MangosicApp.swift */; };
 		2D0000010000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000002 /* ContentView.swift */; };
 		2D0000010000000000000003 /* PlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000003 /* PlayerView.swift */; };
 		2D0000010000000000000004 /* VideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000004 /* VideoPlayerView.swift */; };
@@ -27,7 +27,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		2D0000020000000000000001 /* YTMusicPlayerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YTMusicPlayerApp.swift; sourceTree = "<group>"; };
+		2D0000020000000000000001 /* MangosicApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangosicApp.swift; sourceTree = "<group>"; };
 		2D0000020000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		2D0000020000000000000003 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
 		2D0000020000000000000004 /* VideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoPlayerView.swift; sourceTree = "<group>"; };
@@ -38,7 +38,7 @@
 		2D0000020000000000000009 /* Track.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Track.swift; sourceTree = "<group>"; };
 		2D0000020000000000000010 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		2D0000020000000000000011 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		2D0000030000000000000001 /* YTMusicPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YTMusicPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		2D0000030000000000000001 /* Mangosic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mangosic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D0000020000000000000012 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		2D0000020000000000000013 /* MangosicBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangosicBackground.swift; sourceTree = "<group>"; };
 		2D0000020000000000000014 /* SearchResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResult.swift; sourceTree = "<group>"; };
@@ -62,12 +62,12 @@
 		2D0000050000000000000001 = {
 			isa = PBXGroup;
 			children = (
-				2D0000050000000000000002 /* YTMusicPlayer */,
+				2D0000050000000000000002 /* Mangosic */,
 				2D0000050000000000000003 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		2D0000050000000000000002 /* YTMusicPlayer */ = {
+		2D0000050000000000000002 /* Mangosic */ = {
 			isa = PBXGroup;
 			children = (
 				2D0000050000000000000004 /* App */,
@@ -79,13 +79,13 @@
 				2D0000020000000000000010 /* Assets.xcassets */,
 				2D0000020000000000000011 /* Info.plist */,
 			);
-			path = YTMusicPlayer;
+			path = Mangosic;
 			sourceTree = "<group>";
 		};
 		2D0000050000000000000003 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				2D0000030000000000000001 /* YTMusicPlayer.app */,
+				2D0000030000000000000001 /* Mangosic.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -93,7 +93,7 @@
 		2D0000050000000000000004 /* App */ = {
 			isa = PBXGroup;
 			children = (
-				2D0000020000000000000001 /* YTMusicPlayerApp.swift */,
+				2D0000020000000000000001 /* MangosicApp.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -150,9 +150,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		2D0000060000000000000001 /* YTMusicPlayer */ = {
+		2D0000060000000000000001 /* Mangosic */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 2D0000080000000000000001 /* Build configuration list for PBXNativeTarget "YTMusicPlayer" */;
+			buildConfigurationList = 2D0000080000000000000001 /* Build configuration list for PBXNativeTarget "Mangosic" */;
 			buildPhases = (
 				2D0000070000000000000001 /* Sources */,
 				2D0000040000000000000001 /* Frameworks */,
@@ -162,12 +162,12 @@
 			);
 			dependencies = (
 			);
-			name = YTMusicPlayer;
+			name = Mangosic;
 			packageProductDependencies = (
 				2D0000090000000000000001 /* YouTubeKit */,
 			);
-			productName = YTMusicPlayer;
-			productReference = 2D0000030000000000000001 /* YTMusicPlayer.app */;
+			productName = Mangosic;
+			productReference = 2D0000030000000000000001 /* Mangosic.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -185,7 +185,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 2D0000080000000000000002 /* Build configuration list for PBXProject "YTMusicPlayer" */;
+			buildConfigurationList = 2D0000080000000000000002 /* Build configuration list for PBXProject "Mangosic" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -201,7 +201,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				2D0000060000000000000001 /* YTMusicPlayer */,
+				2D0000060000000000000001 /* Mangosic */,
 			);
 		};
 /* End PBXProject section */
@@ -222,7 +222,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				2D0000010000000000000001 /* YTMusicPlayerApp.swift in Sources */,
+				2D0000010000000000000001 /* MangosicApp.swift in Sources */,
 				2D0000010000000000000002 /* ContentView.swift in Sources */,
 				2D0000010000000000000003 /* PlayerView.swift in Sources */,
 				2D0000010000000000000004 /* VideoPlayerView.swift in Sources */,
@@ -372,7 +372,7 @@
 				DEVELOPMENT_TEAM = DW9FDHHRYM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = YTMusicPlayer/Info.plist;
+				INFOPLIST_FILE = Mangosic/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Mangosic";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -384,7 +384,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.YTMusicPlayer;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.Mangosic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -402,7 +402,7 @@
 				DEVELOPMENT_TEAM = DW9FDHHRYM;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = YTMusicPlayer/Info.plist;
+				INFOPLIST_FILE = Mangosic/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Mangosic";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -414,7 +414,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.YTMusicPlayer;
+				PRODUCT_BUNDLE_IDENTIFIER = com.example.Mangosic;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -425,7 +425,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		2D0000080000000000000001 /* Build configuration list for PBXNativeTarget "YTMusicPlayer" */ = {
+		2D0000080000000000000001 /* Build configuration list for PBXNativeTarget "Mangosic" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2D0000110000000000000003 /* Debug */,
@@ -434,7 +434,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		2D0000080000000000000002 /* Build configuration list for PBXProject "YTMusicPlayer" */ = {
+		2D0000080000000000000002 /* Build configuration list for PBXProject "Mangosic" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				2D0000110000000000000001 /* Debug */,

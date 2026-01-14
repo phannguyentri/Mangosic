@@ -1,4 +1,4 @@
-# YTMusicPlayer iOS
+# Mangosic iOS
 
 A native iOS app to play YouTube audio and video using YouTubeKit.
 
@@ -23,7 +23,7 @@ A native iOS app to play YouTube audio and video using YouTubeKit.
 
 ## Setup
 
-1. Open `YTMusicPlayer.xcodeproj` in Xcode
+1. Open `Mangosic.xcodeproj` in Xcode
 2. Wait for Swift Package Manager to fetch dependencies
 3. Build and run on your device/simulator
 
@@ -44,9 +44,9 @@ The switch is **instant** - playback continues from the same position without an
 ## Architecture
 
 ```
-YTMusicPlayer/
+Mangosic/
 ├── App/
-│   └── YTMusicPlayerApp.swift      # App entry point
+│   └── MangosicApp.swift           # App entry point
 ├── Views/
 │   ├── ContentView.swift           # Main view with URL input
 │   ├── PlayerView.swift            # Audio/Video player view
