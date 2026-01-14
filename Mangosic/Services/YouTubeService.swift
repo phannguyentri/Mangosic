@@ -1,6 +1,9 @@
 import Foundation
 import YouTubeKit
 
+/// Type alias to resolve ambiguity between YouTubeKit.Stream and Foundation.NSStream
+typealias YTStream = YouTubeKit.Stream
+
 /// Service for extracting YouTube video/audio streams using YouTubeKit
 @MainActor
 class YouTubeService: ObservableObject {
@@ -31,7 +34,7 @@ class YouTubeService: ObservableObject {
         async let metadataTask = video.metadata
         async let oEmbedTask = fetchOEmbedInfo(videoID: videoID)
         
-        let streams = try await streamsTask
+        let streams: [YTStream] = try await streamsTask
         
         guard !streams.isEmpty else {
             throw YouTubeError.noStreamsFound
@@ -65,23 +68,17 @@ class YouTubeService: ObservableObject {
             }
         }
         
-        // Get best audio stream (audio only, prefer m4a)
-        let bestAudioStream = streams
-            .filterAudioOnly()
-            .filter { $0.fileExtension == .m4a }
-            .highestAudioBitrateStream()
-            ?? streams.filterAudioOnly().highestAudioBitrateStream()
+        // Get quality settings
+        let qualitySettings = QualitySettings.shared
         
-        // Get best video stream (with audio, natively playable, prefer mp4)
-        let bestVideoStream = streams
-            .filter { $0.includesVideoAndAudioTrack && $0.isNativelyPlayable }
-            .highestResolutionStream()
-            ?? streams
-                .filter { $0.includesVideoAndAudioTrack }
-                .highestResolutionStream()
-            ?? streams
-                .filter { $0.includesVideoTrack }
-                .highestResolutionStream()
+        // Get best audio stream based on quality preference
+        let bestAudioStream = selectAudioStream(from: streams, preferredQuality: qualitySettings.audioQuality)
+        
+        // Get best video stream based on quality preference
+        let bestVideoStream = selectVideoStream(from: streams, preferredQuality: qualitySettings.videoQuality)
+        
+        // Convert resolution to string format (e.g., "720p")
+        let resolutionString: String? = bestVideoStream?.videoResolution.map { "\($0)p" }
         
         return Track(
             id: videoID,
@@ -91,8 +88,92 @@ class YouTubeService: ObservableObject {
             duration: nil, // Duration not available from YouTubeKit metadata
             audioStreamURL: bestAudioStream?.url,
             videoStreamURL: bestVideoStream?.url,
-            resolution: nil
+            resolution: resolutionString
         )
+    }
+    
+    // MARK: - Quality Selection
+    
+    /// Select audio stream based on preferred quality
+    private func selectAudioStream(from streams: [YTStream], preferredQuality: AudioQuality) -> YTStream? {
+        let audioStreams = streams.filterAudioOnly()
+        
+        // Prefer m4a format
+        let m4aStreams = audioStreams.filter { $0.fileExtension == .m4a }
+        let targetStreams = m4aStreams.isEmpty ? audioStreams : m4aStreams
+        
+        switch preferredQuality {
+        case .auto:
+            return targetStreams.highestAudioBitrateStream()
+        case .low:
+            return targetStreams.lowestAudioBitrateStream()
+        case .medium:
+            // Find stream closest to 128kbps
+            return findClosestAudioBitrate(in: targetStreams, targetBitrate: 128_000)
+                ?? targetStreams.lowestAudioBitrateStream()
+        case .high:
+            return targetStreams.highestAudioBitrateStream()
+        }
+    }
+    
+    /// Select video stream based on preferred quality
+    private func selectVideoStream(from streams: [YTStream], preferredQuality: VideoQuality) -> YTStream? {
+        // Filter for playable combined streams
+        let combinedStreams = streams
+            .filter { $0.includesVideoAndAudioTrack && $0.isNativelyPlayable }
+        
+        // Fallback to any video+audio streams if no natively playable found
+        let targetStreams = combinedStreams.isEmpty
+            ? streams.filter { $0.includesVideoAndAudioTrack }
+            : combinedStreams
+        
+        switch preferredQuality {
+        case .auto:
+            return targetStreams.highestResolutionStream()
+        case .p360:
+            return findClosestResolution(in: targetStreams, targetHeight: 360)
+        case .p480:
+            return findClosestResolution(in: targetStreams, targetHeight: 480)
+        case .p720:
+            return findClosestResolution(in: targetStreams, targetHeight: 720)
+        case .p1080:
+            return findClosestResolution(in: targetStreams, targetHeight: 1080)
+        case .p1440:
+            return findClosestResolution(in: targetStreams, targetHeight: 1440)
+        case .p4K:
+            return findClosestResolution(in: targetStreams, targetHeight: 2160)
+        }
+    }
+    
+    /// Find stream closest to target resolution (preferring lower if exact not found)
+    private func findClosestResolution(in streams: [YTStream], targetHeight: Int) -> YTStream? {
+        // First try to find exact match
+        if let exact = streams.first(where: { $0.videoResolution == targetHeight }) {
+            return exact
+        }
+        
+        // Sort by resolution
+        let sorted = streams.sorted(by: { ($0.videoResolution ?? 0) < ($1.videoResolution ?? 0) })
+        
+        // Find closest resolution <= target
+        if let lower = sorted.last(where: { ($0.videoResolution ?? 0) <= targetHeight }) {
+            return lower
+        }
+        
+        // If no lower resolution, return lowest available
+        return sorted.first
+    }
+    
+    /// Find audio stream closest to target bitrate
+    private func findClosestAudioBitrate(in streams: [YTStream], targetBitrate: Int) -> YTStream? {
+        let sorted = streams.sorted(by: { ($0.averageBitrate ?? 0) < ($1.averageBitrate ?? 0) })
+        
+        // Find closest bitrate <= target
+        if let lower = sorted.last(where: { ($0.averageBitrate ?? 0) <= targetBitrate }) {
+            return lower
+        }
+        
+        return sorted.first
     }
     
     // MARK: - oEmbed API

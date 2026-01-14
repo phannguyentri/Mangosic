@@ -130,6 +130,23 @@ class PlayerViewModel: ObservableObject {
         playerService.play(track, mode: mode, seekTime: currentSeekTime)
     }
     
+    /// Reload current track with updated quality settings
+    func reloadWithQuality(seekTime: TimeInterval) async {
+        let input = urlInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !input.isEmpty else { return }
+        
+        isExtracting = true
+        
+        do {
+            let track = try await youtubeService.extractTrack(from: input)
+            isExtracting = false
+            playerService.play(track, mode: selectedMode, seekTime: seekTime)
+        } catch {
+            isExtracting = false
+            showError(message: error.localizedDescription)
+        }
+    }
+    
     // MARK: - Error Handling
     
     private func showError(message: String) {

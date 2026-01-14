@@ -4,6 +4,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel = PlayerViewModel()
     @State private var showingSearch = false
+    @State private var showingSettings = false
     
     var body: some View {
         NavigationStack {
@@ -65,22 +66,43 @@ struct ContentView: View {
     
     private var headerView: some View {
         VStack(spacing: 8) {
-            Image("AppLogo")
-                .resizable()
-                .scaledToFit()
-                .frame(width: 80, height: 80)
-                .cornerRadius(20)
-                .shadow(color: Theme.primaryEnd.opacity(0.3), radius: 10, x: 0, y: 5)
-            
-            Text("Mangosic")
-                .font(.title.bold())
-                .foregroundColor(.white)
-            
-            Text("Play YouTube audio & video")
-                .font(.subheadline)
-                .foregroundColor(.gray)
+            ZStack(alignment: .topTrailing) {
+                VStack(spacing: 8) {
+                    Image("AppLogo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .cornerRadius(20)
+                        .shadow(color: Theme.primaryEnd.opacity(0.3), radius: 10, x: 0, y: 5)
+                    
+                    Text("Mangosic")
+                        .font(.title.bold())
+                        .foregroundColor(.white)
+                    
+                    Text("Play YouTube audio & video")
+                        .font(.subheadline)
+                        .foregroundColor(.gray)
+                }
+                .frame(maxWidth: .infinity)
+                
+                // Settings button
+                Button {
+                    showingSettings = true
+                } label: {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 20))
+                        .foregroundStyle(Theme.primaryGradient)
+                        .padding(10)
+                        .background(Color.white.opacity(0.1))
+                        .clipShape(Circle())
+                }
+                .offset(x: 0, y: 0)
+            }
         }
         .padding(.top, 20)
+        .sheet(isPresented: $showingSettings) {
+            SettingsView()
+        }
     }
     
     private var searchButton: some View {
