@@ -38,6 +38,7 @@ class PlayerViewModel: ObservableObject {
     var isPlaying: Bool { playerService.state.isPlaying }
     var isLoading: Bool { isExtracting || playerService.state.isLoading }
     var playbackMode: PlaybackMode { playerService.playbackMode }
+    var repeatMode: RepeatMode { playerService.repeatMode }
     
     // MARK: - Sample URLs for testing
     let sampleURLs = [
@@ -90,6 +91,11 @@ class PlayerViewModel: ObservableObject {
     func seek(to progress: Double) {
         let time = progress * duration
         playerService.seek(to: time)
+    }
+    
+    /// Toggle repeat mode
+    func toggleRepeatMode() {
+        playerService.toggleRepeatMode()
     }
     
     /// Switch playback mode while maintaining current playback position

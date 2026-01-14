@@ -57,3 +57,33 @@ enum PlayerState: Equatable {
         return false
     }
 }
+
+/// Repeat mode for playback
+enum RepeatMode: CaseIterable {
+    case off
+    case one
+    case all
+    
+    /// Get the next repeat mode in cycle
+    var next: RepeatMode {
+        switch self {
+        case .off: return .one
+        case .one: return .all
+        case .all: return .off
+        }
+    }
+    
+    /// SF Symbol icon name
+    var icon: String {
+        switch self {
+        case .off: return "repeat"
+        case .one: return "repeat.1"
+        case .all: return "repeat"
+        }
+    }
+    
+    /// Whether this mode is active (not off)
+    var isActive: Bool {
+        self != .off
+    }
+}

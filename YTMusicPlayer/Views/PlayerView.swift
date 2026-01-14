@@ -172,7 +172,17 @@ struct PlayerView: View {
     }
     
     private var controlsView: some View {
-        HStack(spacing: 50) {
+        HStack(spacing: 0) {
+            // Shuffle button (placeholder - can be implemented later)
+            Button {
+                // TODO: Implement shuffle
+            } label: {
+                Image(systemName: "shuffle")
+                    .font(.title2)
+                    .foregroundColor(.gray)
+            }
+            .frame(maxWidth: .infinity)
+            
             // Rewind 10s
             Button {
                 let newTime = max(0, viewModel.currentTime - 10)
@@ -182,6 +192,7 @@ struct PlayerView: View {
                     .font(.title)
                     .foregroundColor(.white)
             }
+            .frame(maxWidth: .infinity)
             
             // Play/Pause
             Button {
@@ -204,6 +215,7 @@ struct PlayerView: View {
                 }
             }
             .disabled(viewModel.isLoading)
+            .frame(maxWidth: .infinity)
             
             // Forward 10s
             Button {
@@ -214,7 +226,20 @@ struct PlayerView: View {
                     .font(.title)
                     .foregroundColor(.white)
             }
+            .frame(maxWidth: .infinity)
+            
+            // Repeat button
+            Button {
+                viewModel.toggleRepeatMode()
+            } label: {
+                Image(systemName: viewModel.repeatMode.icon)
+                    .font(.title2)
+                    .foregroundColor(viewModel.repeatMode.isActive ? Theme.primaryEnd : .gray)
+                    .symbolRenderingMode(.hierarchical)
+            }
+            .frame(maxWidth: .infinity)
         }
+        .padding(.horizontal, 8)
     }
     
     private var modeSwitcher: some View {

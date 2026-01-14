@@ -15,6 +15,7 @@ class AudioPlayerService: ObservableObject {
     @Published private(set) var currentTime: TimeInterval = 0
     @Published private(set) var duration: TimeInterval = 0
     @Published private(set) var playbackMode: PlaybackMode = .audio
+    @Published private(set) var repeatMode: RepeatMode = .off
     
     // MARK: - Private Properties
     private var player: AVPlayer?
@@ -32,6 +33,7 @@ class AudioPlayerService: ObservableObject {
     private init() {
         setupAudioSession()
         setupRemoteTransportControls()
+        setupEndOfTrackObserver()
     }
     
     // MARK: - Audio Session Setup
@@ -70,6 +72,33 @@ class AudioPlayerService: ObservableObject {
             }
             self?.seek(to: event.positionTime)
             return .success
+        }
+    }
+    
+    // MARK: - End of Track Observer
+    private func setupEndOfTrackObserver() {
+        NotificationCenter.default.addObserver(
+            forName: .AVPlayerItemDidPlayToEndTime,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor in
+                self?.handleTrackEnded()
+            }
+        }
+    }
+    
+    private func handleTrackEnded() {
+        switch repeatMode {
+        case .off:
+            // Just stop at the end
+            state = .paused
+            currentTime = duration
+            updateNowPlayingInfo()
+        case .one, .all:
+            // Replay the current track
+            seek(to: 0)
+            resume()
         }
     }
     
@@ -276,6 +305,16 @@ class AudioPlayerService: ObservableObject {
         player?.seek(to: cmTime)
         currentTime = time
         updateNowPlayingInfo()
+    }
+    
+    /// Toggle repeat mode (cycles: off -> one -> all -> off)
+    func toggleRepeatMode() {
+        repeatMode = repeatMode.next
+    }
+    
+    /// Set repeat mode
+    func setRepeatMode(_ mode: RepeatMode) {
+        repeatMode = mode
     }
     
     /// Switch playback mode seamlessly without reloading the player
