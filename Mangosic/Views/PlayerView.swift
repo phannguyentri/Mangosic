@@ -5,7 +5,8 @@ import AVKit
 struct PlayerView: View {
     @ObservedObject var viewModel: PlayerViewModel
     @Environment(\.dismiss) private var dismiss
-    @State private var showQualityPicker = false
+    @ObservedObject private var qualitySettings = QualitySettings.shared
+    @State private var isUpgradingQuality = false
     
     var body: some View {
         ZStack {
@@ -22,23 +23,30 @@ struct PlayerView: View {
                         VideoPlayerView(player: viewModel.playerService.getPlayer())
                             .aspectRatio(16/9, contentMode: .fit)
                         
-                        // Resolution badge button
+                        // HD Toggle Button
                         Button {
-                            showQualityPicker = true
+                            toggleResolution()
                         } label: {
                             HStack(spacing: 4) {
-                                Image(systemName: "sparkles.tv")
-                                    .font(.system(size: 10, weight: .bold))
-                                Text(viewModel.currentTrack?.resolution ?? "HD")
+                                if isUpgradingQuality {
+                                    ProgressView()
+                                        .scaleEffect(0.6)
+                                        .tint(.white)
+                                } else {
+                                    Image(systemName: qualitySettings.isHighResolution ? "sparkles.tv.fill" : "play.rectangle")
+                                        .font(.system(size: 10, weight: .bold))
+                                }
+                                Text(qualitySettings.isHighResolution ? "HD" : (viewModel.currentTrack?.resolution ?? "SD"))
                                     .font(.system(size: 11, weight: .bold))
                             }
                             .foregroundColor(.white)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 5)
-                            .background(Color.black.opacity(0.7))
+                            .background(qualitySettings.isHighResolution ? Theme.primaryEnd : Color.black.opacity(0.7))
                             .cornerRadius(6)
                         }
                         .padding(12)
+                        .disabled(isUpgradingQuality)
                     }
                 } else {
                     albumArtView
@@ -97,11 +105,6 @@ struct PlayerView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
-        .sheet(isPresented: $showQualityPicker) {
-            QualityPickerSheet(viewModel: viewModel)
-                .presentationDetents([.medium])
-                .presentationDragIndicator(.visible)
-        }
     }
     
     // MARK: - Subviews
@@ -311,161 +314,23 @@ struct PlayerView: View {
         let seconds = Int(time) % 60
         return String(format: "%d:%02d", minutes, seconds)
     }
-}
-
-// MARK: - Quality Picker Sheet
-
-struct QualityPickerSheet: View {
-    @ObservedObject var viewModel: PlayerViewModel
-    @Environment(\.dismiss) private var dismiss
-    @ObservedObject private var qualitySettings = QualitySettings.shared
-    @State private var isChanging = false
     
-    var body: some View {
-        NavigationView {
-            ZStack {
-                Theme.background.ignoresSafeArea()
-                
-                VStack(spacing: 20) {
-                    // Current quality info
-                    currentQualityCard
-                    
-                    // Quality options
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Video Quality")
-                            .font(.headline)
-                            .foregroundColor(.white)
-                        
-                        LazyVGrid(columns: [
-                            GridItem(.flexible()),
-                            GridItem(.flexible()),
-                            GridItem(.flexible())
-                        ], spacing: 12) {
-                            ForEach(VideoQuality.allCases) { quality in
-                                qualityButton(quality)
-                            }
-                        }
-                    }
-                    
-                    Spacer()
-                    
-                    // Note
-                    Text("Changing quality will reload the video from current position")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .multilineTextAlignment(.center)
-                }
-                .padding()
-                
-                if isChanging {
-                    Color.black.opacity(0.5)
-                        .ignoresSafeArea()
-                    ProgressView()
-                        .scaleEffect(1.5)
-                        .tint(.white)
-                }
-            }
-            .navigationTitle("Video Quality")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .foregroundStyle(Theme.primaryGradient)
-                }
-            }
-            .toolbarBackground(Theme.background, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-        }
-    }
+    // MARK: - Resolution Toggle
     
-    private var currentQualityCard: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Currently Playing")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-                Text(viewModel.currentTrack?.resolution ?? "Unknown")
-                    .font(.title2.bold())
-                    .foregroundStyle(Theme.primaryGradient)
-            }
-            
-            Spacer()
-            
-            Image(systemName: "play.rectangle.fill")
-                .font(.largeTitle)
-                .foregroundStyle(Theme.primaryGradient)
-        }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.05))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(Theme.primaryEnd.opacity(0.3), lineWidth: 1)
-        )
-    }
-    
-    private func qualityButton(_ quality: VideoQuality) -> some View {
-        let isSelected = qualitySettings.videoQuality == quality
-        let isCurrent = viewModel.currentTrack?.resolution == quality.resolution.map { "\($0)p" }
-        
-        return Button {
-            guard !isChanging else { return }
-            changeQuality(to: quality)
-        } label: {
-            VStack(spacing: 4) {
-                Text(quality.rawValue == "auto" ? "Auto" : quality.rawValue)
-                    .font(.system(size: 14, weight: .semibold))
-                
-                if quality != .auto {
-                    Text(qualityLabel(for: quality))
-                        .font(.system(size: 10))
-                        .foregroundColor(.gray)
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Theme.primaryEnd : Color.white.opacity(0.1))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(isCurrent ? Theme.accent : Color.clear, lineWidth: 2)
-            )
-            .foregroundColor(.white)
-        }
-        .disabled(isChanging)
-    }
-    
-    private func qualityLabel(for quality: VideoQuality) -> String {
-        switch quality {
-        case .p360, .p480: return "SD"
-        case .p720: return "HD"
-        case .p1080: return "FHD"
-        case .p1440: return "2K"
-        case .p4K: return "4K"
-        default: return ""
-        }
-    }
-    
-    private func changeQuality(to quality: VideoQuality) {
-        qualitySettings.videoQuality = quality
-        
+    /// Toggle between Normal and HD resolution modes
+    private func toggleResolution() {
+        guard !isUpgradingQuality else { return }
         guard let track = viewModel.currentTrack else { return }
         
-        isChanging = true
+        isUpgradingQuality = true
+        qualitySettings.toggleResolution()
         
         Task {
-            // Re-extract the video with new quality setting
+            // Re-extract the video with new resolution mode
             let currentTime = viewModel.currentTime
             viewModel.urlInput = track.id
             await viewModel.reloadWithQuality(seekTime: currentTime)
-            isChanging = false
-            dismiss()
+            isUpgradingQuality = false
         }
     }
 }

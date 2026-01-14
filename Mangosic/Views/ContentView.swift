@@ -4,7 +4,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel = PlayerViewModel()
     @State private var showingSearch = false
-    @State private var showingSettings = false
+
     
     var body: some View {
         NavigationStack {
@@ -84,25 +84,9 @@ struct ContentView: View {
                         .foregroundColor(.gray)
                 }
                 .frame(maxWidth: .infinity)
-                
-                // Settings button
-                Button {
-                    showingSettings = true
-                } label: {
-                    Image(systemName: "gearshape.fill")
-                        .font(.system(size: 20))
-                        .foregroundStyle(Theme.primaryGradient)
-                        .padding(10)
-                        .background(Color.white.opacity(0.1))
-                        .clipShape(Circle())
-                }
-                .offset(x: 0, y: 0)
             }
         }
         .padding(.top, 20)
-        .sheet(isPresented: $showingSettings) {
-            SettingsView()
-        }
     }
     
     private var searchButton: some View {
