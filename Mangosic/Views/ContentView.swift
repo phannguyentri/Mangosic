@@ -32,8 +32,7 @@ struct ContentView: View {
                         // Play button
                         playButton
                         
-                        // Sample videos
-                        sampleVideosView
+
                     }
                     .padding()
                     .padding(.bottom, viewModel.currentTrack != nil ? 100 : 20)
@@ -227,59 +226,7 @@ struct ContentView: View {
         .animation(.easeInOut(duration: 0.2), value: viewModel.isLoading)
     }
     
-    private var sampleVideosView: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Try these samples")
-                .font(.caption)
-                .foregroundColor(.gray)
-            
-            ForEach(viewModel.sampleURLs, id: \.1) { sample in
-                let isLoadingThisSample = viewModel.isLoading && viewModel.urlInput == sample.1
-                
-                Button {
-                    Task {
-                        await viewModel.playSample(sample.1)
-                    }
-                } label: {
-                    HStack {
-                        if isLoadingThisSample {
-                            ProgressView()
-                                .progressViewStyle(CircularProgressViewStyle(tint: Theme.primaryEnd))
-                                .scaleEffect(0.8)
-                        } else {
-                            Image(systemName: "music.note")
-                                .foregroundColor(Theme.primaryEnd)
-                        }
-                        Text(sample.0)
-                            .foregroundColor(.white)
-                        Spacer()
-                        if isLoadingThisSample {
-                            Text("Loading...")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                        } else {
-                            Image(systemName: "chevron.right")
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    .padding()
-                    .background(
-                        isLoadingThisSample 
-                            ? Theme.primaryEnd.opacity(0.1) 
-                            : Color.white.opacity(0.05)
-                    )
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(isLoadingThisSample ? Theme.primaryEnd.opacity(0.3) : Color.clear, lineWidth: 1)
-                    )
-                }
-                .disabled(viewModel.isLoading)
-                .opacity(viewModel.isLoading && !isLoadingThisSample ? 0.5 : 1)
-                .animation(.easeInOut(duration: 0.2), value: isLoadingThisSample)
-            }
-        }
-    }
+
 }
 
 #Preview {

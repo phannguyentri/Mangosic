@@ -237,7 +237,9 @@ struct SearchView: View {
                     }
                 } else {
                     ForEach(Array(viewModel.searchState.results.enumerated()), id: \.element.id) { index, result in
-                        SearchResultRow(result: result) {
+                        let isLoadingThis = playerViewModel.isLoading && playerViewModel.urlInput == result.id
+                        
+                        SearchResultRow(result: result, isLoading: isLoadingThis) {
                             Task {
                                 await viewModel.playResult(result, playerViewModel: playerViewModel)
                             }
@@ -385,6 +387,7 @@ struct SuggestionRow: View {
 /// Search result row with thumbnail
 struct SearchResultRow: View {
     let result: SearchResult
+    let isLoading: Bool
     let onTap: () -> Void
     
     @State private var isPressed = false
@@ -446,10 +449,18 @@ struct SearchResultRow: View {
                 Spacer()
                 
                 // Play indicator
-                Image(systemName: "play.circle.fill")
-                    .font(.system(size: 28))
-                    .foregroundStyle(Theme.primaryGradient)
-                    .opacity(isPressed ? 1 : 0.7)
+                ZStack {
+                    if isLoading {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: Theme.primaryEnd))
+                    } else {
+                        Image(systemName: "play.circle.fill")
+                            .font(.system(size: 28))
+                            .foregroundStyle(Theme.primaryGradient)
+                            .opacity(isPressed ? 1 : 0.7)
+                    }
+                }
+                .frame(width: 30, height: 30)
             }
             .padding(12)
             .background(
@@ -458,9 +469,10 @@ struct SearchResultRow: View {
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(isPressed ? Theme.primaryEnd.opacity(0.3) : Color.clear, lineWidth: 1)
+                    .stroke(isPressed || isLoading ? Theme.primaryEnd.opacity(0.3) : Color.clear, lineWidth: 1)
             )
         }
+        .disabled(isLoading)
         .buttonStyle(ScaleButtonStyle())
     }
     

@@ -7,7 +7,7 @@ class PlayerViewModel: ObservableObject {
     
     // MARK: - Published Properties
     @Published var urlInput: String = ""
-    @Published var selectedMode: PlaybackMode = .audio
+    @Published var selectedMode: PlaybackMode = .video
     @Published var showingPlayer: Bool = false
     @Published var errorMessage: String?
     @Published var showError: Bool = false
@@ -40,12 +40,7 @@ class PlayerViewModel: ObservableObject {
     var playbackMode: PlaybackMode { playerService.playbackMode }
     var repeatMode: RepeatMode { playerService.repeatMode }
     
-    // MARK: - Sample URLs for testing
-    let sampleURLs = [
-        ("Lofi Girl", "jfKfPfyJRdk"),
-        ("Relaxing Music", "lTRiuFIWV54"),
-        ("Nature Sounds", "eKFTSSKCzWA")
-    ]
+
     
     // MARK: - Actions
     
@@ -88,11 +83,7 @@ class PlayerViewModel: ObservableObject {
         }
     }
     
-    /// Play a sample video
-    func playSample(_ videoId: String) async {
-        urlInput = videoId
-        await loadAndPlay()
-    }
+
     
     /// Toggle play/pause
     func togglePlayPause() {

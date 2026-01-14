@@ -48,8 +48,8 @@ struct Track: Identifiable {
 
 /// Playback mode
 enum PlaybackMode: String, CaseIterable {
-    case audio = "Audio Only"
     case video = "Video"
+    case audio = "Audio Only"
     
     var icon: String {
         switch self {
