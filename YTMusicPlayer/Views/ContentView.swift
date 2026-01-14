@@ -3,6 +3,7 @@ import SwiftUI
 /// Main view with URL input and playback controls
 struct ContentView: View {
     @StateObject private var viewModel = PlayerViewModel()
+    @State private var showingSearch = false
     
     var body: some View {
         NavigationStack {
@@ -13,6 +14,12 @@ struct ContentView: View {
                 VStack(spacing: 24) {
                     // Logo and title
                     headerView
+                    
+                    // Search Button - Featured prominently
+                    searchButton
+                    
+                    // Divider with "or"
+                    orDivider
                     
                     // URL Input
                     urlInputView
@@ -37,6 +44,9 @@ struct ContentView: View {
             }
             .navigationDestination(isPresented: $viewModel.showingPlayer) {
                 PlayerView(viewModel: viewModel)
+            }
+            .navigationDestination(isPresented: $showingSearch) {
+                SearchView(playerViewModel: viewModel)
             }
             .alert("Error", isPresented: $viewModel.showError) {
                 Button("OK") { viewModel.clearError() }
@@ -67,6 +77,55 @@ struct ContentView: View {
                 .foregroundColor(.gray)
         }
         .padding(.top, 20)
+    }
+    
+    private var searchButton: some View {
+        Button {
+            showingSearch = true
+        } label: {
+            HStack(spacing: 12) {
+                Image(systemName: "magnifyingglass")
+                    .font(.system(size: 18, weight: .medium))
+                
+                Text("Search YouTube")
+                    .font(.headline)
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.7))
+            }
+            .foregroundColor(.white)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 16)
+            .background(
+                LinearGradient(
+                    colors: [Theme.primaryStart.opacity(0.9), Theme.primaryEnd.opacity(0.9)],
+                    startPoint: .leading,
+                    endPoint: .trailing
+                )
+            )
+            .cornerRadius(16)
+            .shadow(color: Theme.primaryEnd.opacity(0.4), radius: 12, y: 6)
+        }
+        .buttonStyle(ScaleButtonStyle())
+    }
+    
+    private var orDivider: some View {
+        HStack(spacing: 16) {
+            Rectangle()
+                .fill(Color.white.opacity(0.2))
+                .frame(height: 1)
+            
+            Text("or paste URL")
+                .font(.caption)
+                .foregroundColor(.gray)
+            
+            Rectangle()
+                .fill(Color.white.opacity(0.2))
+                .frame(height: 1)
+        }
     }
     
     private var urlInputView: some View {

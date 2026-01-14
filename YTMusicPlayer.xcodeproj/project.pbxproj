@@ -20,6 +20,10 @@
 		2D0000010000000000000010 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000010 /* Assets.xcassets */; };
 		2D0000010000000000000012 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000012 /* Theme.swift */; };
 		2D0000010000000000000013 /* MangosicBackground.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000013 /* MangosicBackground.swift */; };
+		2D0000010000000000000014 /* SearchResult.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000014 /* SearchResult.swift */; };
+		2D0000010000000000000015 /* YouTubeSearchService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000015 /* YouTubeSearchService.swift */; };
+		2D0000010000000000000016 /* SearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000016 /* SearchViewModel.swift */; };
+		2D0000010000000000000017 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000017 /* SearchView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -37,6 +41,10 @@
 		2D0000030000000000000001 /* YTMusicPlayer.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = YTMusicPlayer.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		2D0000020000000000000012 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
 		2D0000020000000000000013 /* MangosicBackground.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangosicBackground.swift; sourceTree = "<group>"; };
+		2D0000020000000000000014 /* SearchResult.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchResult.swift; sourceTree = "<group>"; };
+		2D0000020000000000000015 /* YouTubeSearchService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = YouTubeSearchService.swift; sourceTree = "<group>"; };
+		2D0000020000000000000016 /* SearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchViewModel.swift; sourceTree = "<group>"; };
+		2D0000020000000000000017 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -98,6 +106,7 @@
 				2D0000020000000000000004 /* VideoPlayerView.swift */,
 				2D0000020000000000000005 /* NowPlayingBar.swift */,
 				2D0000020000000000000013 /* MangosicBackground.swift */,
+				2D0000020000000000000017 /* SearchView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -106,6 +115,7 @@
 			isa = PBXGroup;
 			children = (
 				2D0000020000000000000006 /* PlayerViewModel.swift */,
+				2D0000020000000000000016 /* SearchViewModel.swift */,
 			);
 			path = ViewModels;
 			sourceTree = "<group>";
@@ -115,6 +125,7 @@
 			children = (
 				2D0000020000000000000007 /* YouTubeService.swift */,
 				2D0000020000000000000008 /* AudioPlayerService.swift */,
+				2D0000020000000000000015 /* YouTubeSearchService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -123,6 +134,7 @@
 			isa = PBXGroup;
 			children = (
 				2D0000020000000000000009 /* Track.swift */,
+				2D0000020000000000000014 /* SearchResult.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -221,6 +233,10 @@
 				2D0000010000000000000009 /* Track.swift in Sources */,
 				2D0000010000000000000012 /* Theme.swift in Sources */,
 				2D0000010000000000000013 /* MangosicBackground.swift in Sources */,
+				2D0000010000000000000014 /* SearchResult.swift in Sources */,
+				2D0000010000000000000015 /* YouTubeSearchService.swift in Sources */,
+				2D0000010000000000000016 /* SearchViewModel.swift in Sources */,
+				2D0000010000000000000017 /* SearchView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
