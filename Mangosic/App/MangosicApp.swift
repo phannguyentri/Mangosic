@@ -1,22 +1,57 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct MangosicApp: App {
     @StateObject private var playerViewModel = PlayerViewModel()
     @StateObject private var deepLinkManager = DeepLinkManager()
+    @StateObject private var queueService = QueueService.shared
+    @StateObject private var playlistService = PlaylistService.shared
+    @StateObject private var historyService = HistoryService.shared
+    
+    /// SwiftData model container
+    var sharedModelContainer: ModelContainer = {
+        let schema = Schema([
+            Playlist.self,
+            PlaylistTrackItem.self,
+            RecentPlay.self
+        ])
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: false
+        )
+        
+        do {
+            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }()
     
     var body: some Scene {
         WindowGroup {
             ContentView()
                 .environmentObject(playerViewModel)
                 .environmentObject(deepLinkManager)
+                .environmentObject(queueService)
+                .environmentObject(playlistService)
+                .environmentObject(historyService)
                 .onOpenURL { url in
                     handleIncomingURL(url)
                 }
                 .onAppear {
+                    setupServices()
                     checkForSharedVideo()
                 }
         }
+        .modelContainer(sharedModelContainer)
+    }
+    
+    /// Configure services with model context
+    private func setupServices() {
+        let context = sharedModelContainer.mainContext
+        PlaylistService.shared.configure(with: context)
+        HistoryService.shared.configure(with: context)
     }
     
     /// Handle URL opened from Share Extension
