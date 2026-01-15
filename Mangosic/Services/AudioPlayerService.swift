@@ -23,6 +23,9 @@ class AudioPlayerService: ObservableObject {
     private var timeObserver: Any?
     private var cancellables = Set<AnyCancellable>()
     private var cachedDuration: [String: TimeInterval] = [:] // Cache duration by video ID
+    private var cachedArtwork: MPMediaItemArtwork? // Cache artwork to prevent flickering
+    private var cachedArtworkTrackId: String? // Track ID for cached artwork
+    private var isLoadingArtwork: Bool = false // Prevent multiple concurrent downloads
     
     var progress: Double {
         guard duration > 0 else { return 0 }
@@ -106,6 +109,8 @@ class AudioPlayerService: ObservableObject {
     private func updateNowPlayingInfo() {
         guard let track = currentTrack else {
             MPNowPlayingInfoCenter.default().nowPlayingInfo = nil
+            cachedArtwork = nil
+            cachedArtworkTrackId = nil
             return
         }
         
@@ -117,20 +122,39 @@ class AudioPlayerService: ObservableObject {
             MPNowPlayingInfoPropertyPlaybackRate: state.isPlaying ? 1.0 : 0.0
         ]
         
-        // Load artwork asynchronously
-        if let thumbnailURL = track.thumbnailURL {
-            Task {
-                if let (data, _) = try? await URLSession.shared.data(from: thumbnailURL),
-                   let image = UIImage(data: data) {
-                    let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
-                    info[MPMediaItemPropertyArtwork] = artwork
-                    MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        // Use cached artwork if available for current track
+        if cachedArtworkTrackId == track.id, let artwork = cachedArtwork {
+            info[MPMediaItemPropertyArtwork] = artwork
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+        } else {
+            // Set info without artwork first (only if no cached artwork)
+            MPNowPlayingInfoCenter.default().nowPlayingInfo = info
+            
+            // Load artwork asynchronously only if not already loading
+            if !isLoadingArtwork, let thumbnailURL = track.thumbnailURL {
+                isLoadingArtwork = true
+                let trackId = track.id
+                Task {
+                    defer { isLoadingArtwork = false }
+                    if let (data, _) = try? await URLSession.shared.data(from: thumbnailURL),
+                       let image = UIImage(data: data) {
+                        let artwork = MPMediaItemArtwork(boundsSize: image.size) { _ in image }
+                        // Cache the artwork
+                        self.cachedArtwork = artwork
+                        self.cachedArtworkTrackId = trackId
+                        
+                        // Update info with artwork
+                        var infoWithArtwork = info
+                        infoWithArtwork[MPMediaItemPropertyArtwork] = artwork
+                        // Update elapsed time to current value
+                        infoWithArtwork[MPNowPlayingInfoPropertyElapsedPlaybackTime] = self.currentTime
+                        MPNowPlayingInfoCenter.default().nowPlayingInfo = infoWithArtwork
+                    }
                 }
             }
         }
-        
-        MPNowPlayingInfoCenter.default().nowPlayingInfo = info
     }
+
     
     // MARK: - Playback Control
     
