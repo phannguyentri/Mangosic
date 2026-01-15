@@ -43,7 +43,8 @@ class YouTubeService: ObservableObject {
         // Default values
         var title = "YouTube Video"
         var author = "YouTube"
-        var thumbnailURL: URL? = URL(string: "https://img.youtube.com/vi/\(videoID)/maxresdefault.jpg")
+        // Use hqdefault.jpg as it's always available. maxresdefault.jpg may not exist for all videos.
+        var thumbnailURL: URL? = URL(string: "https://img.youtube.com/vi/\(videoID)/hqdefault.jpg")
 
         
         
