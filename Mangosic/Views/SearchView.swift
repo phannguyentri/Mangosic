@@ -54,7 +54,7 @@ struct SearchView: View {
                 .frame(maxHeight: .infinity)
             }
         }
-        .ignoresSafeArea(.keyboard, edges: .bottom) // Prevent keyboard from pushing content up
+
         .navigationBarHidden(true)
         .onAppear {
             isSearchFieldFocused = true
@@ -167,6 +167,7 @@ struct SearchView: View {
                         RecentSearchRow(
                             text: search,
                             onTap: {
+                                isSearchFieldFocused = false
                                 viewModel.search(query: search)
                             },
                             onRemove: {
@@ -208,6 +209,7 @@ struct SearchView: View {
                         text: suggestion,
                         searchText: viewModel.searchText
                     ) {
+                        isSearchFieldFocused = false
                         viewModel.selectSuggestion(suggestion)
                     }
                     .transition(
@@ -328,6 +330,7 @@ struct RecentSearchRow: View {
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .background(Color.white.opacity(0.001)) // For tap area
@@ -358,6 +361,7 @@ struct SuggestionRow: View {
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
         .background(Color.white.opacity(0.001))

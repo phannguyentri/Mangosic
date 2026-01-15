@@ -4,6 +4,7 @@ import SwiftUI
 struct ContentView: View {
     @StateObject private var viewModel = PlayerViewModel()
     @State private var showingSearch = false
+    @FocusState private var isUrlFieldFocused: Bool
 
     
     var body: some View {
@@ -56,6 +57,9 @@ struct ContentView: View {
                 Button("OK") { viewModel.clearError() }
             } message: {
                 Text(viewModel.errorMessage ?? "Unknown error")
+            }
+            .onTapGesture {
+                isUrlFieldFocused = false
             }
         }
         .preferredColorScheme(.dark)
@@ -158,6 +162,7 @@ struct ContentView: View {
                     .foregroundColor(.white)
                     .autocapitalization(.none)
                     .autocorrectionDisabled()
+                    .focused($isUrlFieldFocused)
                 
                 if !viewModel.urlInput.isEmpty {
                     Button {
