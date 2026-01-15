@@ -6,7 +6,9 @@ struct PlayerView: View {
     @ObservedObject var viewModel: PlayerViewModel
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var qualitySettings = QualitySettings.shared
+    @ObservedObject private var sleepTimerService = SleepTimerService.shared
     @State private var isUpgradingQuality = false
+    @State private var showingSleepTimer = false
     
     var body: some View {
         ZStack {
@@ -105,6 +107,11 @@ struct PlayerView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        .sheet(isPresented: $showingSleepTimer) {
+            SleepTimerSheet()
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+        }
     }
     
     // MARK: - Subviews
@@ -213,13 +220,28 @@ struct PlayerView: View {
     
     private var controlsView: some View {
         HStack(spacing: 0) {
-            // Shuffle button (placeholder - can be implemented later)
+            // Sleep Timer button
             Button {
-                // TODO: Implement shuffle
+                showingSleepTimer = true
             } label: {
-                Image(systemName: "shuffle")
-                    .font(.title2)
-                    .foregroundColor(.gray)
+                ZStack {
+                    Image(systemName: "moon.fill")
+                        .font(.title2)
+                        .foregroundColor(sleepTimerService.isTimerActive ? Theme.primaryEnd : .gray)
+                    
+                    if sleepTimerService.isTimerActive {
+                        // ZZZ indicator
+                        Text("z")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundColor(Theme.primaryStart)
+                            .offset(x: 10, y: -8)
+                        
+                        Text("z")
+                            .font(.system(size: 6, weight: .bold))
+                            .foregroundColor(Theme.primaryStart)
+                            .offset(x: 14, y: -12)
+                    }
+                }
             }
             .frame(maxWidth: .infinity)
             

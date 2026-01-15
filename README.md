@@ -10,6 +10,10 @@ A native iOS app to play YouTube audio and video using YouTubeKit.
 - 🎛️ **Now Playing** - Lock screen controls and media info
 - 📱 **iOS 17+** - Modern SwiftUI interface
 - 🔄 **Seamless Mode Switching** - Switch between audio and video instantly without interruption
+- 🔁 **Repeat Mode** - Loop single track or entire queue
+- 💤 **Sleep Timer** - Auto-stop playback after a set time or at end of song
+- 🔍 **YouTube Search** - Search and play YouTube videos directly in app
+- 🎨 **HD Video** - Support for high-resolution video playback (up to 1080p+)
 
 ## Requirements
 
@@ -29,9 +33,10 @@ A native iOS app to play YouTube audio and video using YouTubeKit.
 
 ## Usage
 
-1. Paste a YouTube URL or video ID
-2. Choose "Play Audio" or "Play Video"
-3. Enjoy!
+1. Search for a song or paste a YouTube URL
+2. Tap on a result to start playing
+3. Use the player controls to manage playback
+4. Switch between audio and video modes as needed
 
 ### Mode Switching
 
@@ -41,24 +46,48 @@ While playing, you can switch between audio and video modes:
 
 The switch is **instant** - playback continues from the same position without any loading or buffering.
 
+### Sleep Timer
+
+The Sleep Timer feature allows you to automatically stop playback:
+
+1. Open the full player view
+2. Tap the **moon icon** (🌙) in the playback controls
+3. Choose from available options:
+   - **End of Song** - Stop when current song finishes
+   - **5 - 180 Minutes** - Stop after the selected duration
+
+The timer status is displayed on the moon icon when active.
+
 ## Architecture
 
 ```
 Mangosic/
 ├── App/
-│   └── MangosicApp.swift           # App entry point
+│   └── MangosicApp.swift              # App entry point
 ├── Views/
-│   ├── ContentView.swift           # Main view with URL input
-│   ├── PlayerView.swift            # Audio/Video player view
-│   ├── VideoPlayerView.swift       # Video player component
-│   └── NowPlayingBar.swift         # Mini player bar
+│   ├── ContentView.swift              # Main view with search
+│   ├── SearchView.swift               # YouTube search interface
+│   ├── PlayerView.swift               # Audio/Video player view
+│   ├── VideoPlayerView.swift          # Video player component
+│   ├── NowPlayingBar.swift            # Mini player bar
+│   ├── MangosicBackground.swift       # App background styling
+│   └── Components/
+│       └── SleepTimerView.swift       # Sleep timer UI components
 ├── ViewModels/
-│   └── PlayerViewModel.swift       # Player state management
+│   ├── PlayerViewModel.swift          # Player state management
+│   └── SearchViewModel.swift          # Search state management
 ├── Services/
-│   ├── YouTubeService.swift        # YouTubeKit wrapper
-│   └── AudioPlayerService.swift    # AVPlayer management
-└── Models/
-    └── Track.swift                 # Track data model
+│   ├── YouTubeService.swift           # YouTubeKit wrapper
+│   ├── YouTubeSearchService.swift     # YouTube search API
+│   ├── AudioPlayerService.swift       # AVPlayer management
+│   └── SleepTimerService.swift        # Sleep timer logic
+├── Models/
+│   ├── Track.swift                    # Track data model
+│   ├── SearchResult.swift             # Search result model
+│   ├── QualitySettings.swift          # Video quality settings
+│   └── SleepTimerOption.swift         # Sleep timer options enum
+└── Theme/
+    └── Theme.swift                    # App color theme
 ```
 
 ## Technical Notes
@@ -86,6 +115,33 @@ This design choice ensures:
 - Duration is always accurate (audio-only streams sometimes have incorrect metadata)
 - Mode switching is seamless when video stream is available
 - Fallback to audio-only stream if video is unavailable
+
+### Sleep Timer Architecture
+
+The Sleep Timer uses a singleton service pattern:
+
+```swift
+// Set a 30-minute timer
+SleepTimerService.shared.setTimer(.minutes30)
+
+// Set "End of Song" mode
+SleepTimerService.shared.setTimer(.endOfSong)
+
+// Cancel timer
+SleepTimerService.shared.cancelTimer()
+```
+
+Key components:
+- **SleepTimerOption** - Enum with all timer duration options
+- **SleepTimerService** - Singleton managing timer state and countdown
+- **SleepTimerSheet** - SwiftUI sheet for timer selection
+- **SleepTimerIndicator** - Compact status indicator
+
+## Documentation
+
+See the [docs](./docs) folder for detailed documentation:
+
+- [Sleep Timer](./docs/SleepTimer.md) - Sleep Timer feature documentation
 
 ## License
 

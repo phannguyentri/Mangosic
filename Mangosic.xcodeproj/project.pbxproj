@@ -26,6 +26,9 @@
 		2D0000010000000000000017 /* SearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000017 /* SearchView.swift */; };
 		2D0000010000000000000018 /* QualitySettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000018 /* QualitySettings.swift */; };
 		2D0000010000000000000019 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000019 /* SettingsView.swift */; };
+		2D0000010000000000000020 /* SleepTimerOption.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000020 /* SleepTimerOption.swift */; };
+		2D0000010000000000000021 /* SleepTimerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000021 /* SleepTimerService.swift */; };
+		2D0000010000000000000022 /* SleepTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000022 /* SleepTimerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -49,6 +52,9 @@
 		2D0000020000000000000017 /* SearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SearchView.swift; sourceTree = "<group>"; };
 		2D0000020000000000000018 /* QualitySettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QualitySettings.swift; sourceTree = "<group>"; };
 		2D0000020000000000000019 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		2D0000020000000000000020 /* SleepTimerOption.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepTimerOption.swift; sourceTree = "<group>"; };
+		2D0000020000000000000021 /* SleepTimerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepTimerService.swift; sourceTree = "<group>"; };
+		2D0000020000000000000022 /* SleepTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepTimerView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -105,6 +111,7 @@
 		2D0000050000000000000005 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				2D0000050000000000000020 /* Components */,
 				2D0000020000000000000002 /* ContentView.swift */,
 				2D0000020000000000000003 /* PlayerView.swift */,
 				2D0000020000000000000004 /* VideoPlayerView.swift */,
@@ -131,6 +138,7 @@
 				2D0000020000000000000007 /* YouTubeService.swift */,
 				2D0000020000000000000008 /* AudioPlayerService.swift */,
 				2D0000020000000000000015 /* YouTubeSearchService.swift */,
+				2D0000020000000000000021 /* SleepTimerService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -141,6 +149,7 @@
 				2D0000020000000000000009 /* Track.swift */,
 				2D0000020000000000000014 /* SearchResult.swift */,
 				2D0000020000000000000018 /* QualitySettings.swift */,
+				2D0000020000000000000020 /* SleepTimerOption.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -151,6 +160,14 @@
 				2D0000020000000000000012 /* Theme.swift */,
 			);
 			path = Theme;
+			sourceTree = "<group>";
+		};
+		2D0000050000000000000020 /* Components */ = {
+			isa = PBXGroup;
+			children = (
+				2D0000020000000000000022 /* SleepTimerView.swift */,
+			);
+			path = Components;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -245,6 +262,9 @@
 				2D0000010000000000000017 /* SearchView.swift in Sources */,
 				2D0000010000000000000018 /* QualitySettings.swift in Sources */,
 				2D0000010000000000000019 /* SettingsView.swift in Sources */,
+				2D0000010000000000000020 /* SleepTimerOption.swift in Sources */,
+				2D0000010000000000000021 /* SleepTimerService.swift in Sources */,
+				2D0000010000000000000022 /* SleepTimerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
