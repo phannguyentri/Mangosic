@@ -2,7 +2,8 @@ import SwiftUI
 
 /// Main view with URL input and playback controls
 struct ContentView: View {
-    @StateObject private var viewModel = PlayerViewModel()
+    @EnvironmentObject var viewModel: PlayerViewModel
+    @EnvironmentObject var deepLinkManager: DeepLinkManager
     @State private var showingSearch = false
     @FocusState private var isUrlFieldFocused: Bool
 
@@ -242,4 +243,6 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
+        .environmentObject(PlayerViewModel())
+        .environmentObject(DeepLinkManager())
 }
