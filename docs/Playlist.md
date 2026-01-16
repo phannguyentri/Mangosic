@@ -435,16 +435,3 @@ Mangosic/
         ├── QueueComponents.swift   # QueueButton, ShuffleButton
         └── TrackContextMenu.swift  # AddToPlaylistSheet
 ```
-
-## Future Enhancements
-
-- [ ] Import YouTube playlists
-- [ ] Playlist artwork customization
-- [ ] Smart playlists (auto-generated based on listening habits)
-- [ ] Collaborative playlists
-- [ ] Cloud sync (iCloud)
-- [ ] Playlist folders/categories
-- [ ] Auto-play next track when current finishes
-- [ ] Cross-fade between tracks
-- [ ] Gapless playback
-- [ ] Sleep timer integration with queue
