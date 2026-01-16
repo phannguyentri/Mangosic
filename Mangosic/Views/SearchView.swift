@@ -395,6 +395,7 @@ struct SearchResultRow: View {
     let onTap: () -> Void
     
     @State private var isPressed = false
+    @State private var showAddToPlaylist = false
     
     var body: some View {
         Button(action: onTap) {
@@ -452,19 +453,33 @@ struct SearchResultRow: View {
                 
                 Spacer()
                 
-                // Play indicator
-                ZStack {
-                    if isLoading {
-                        ProgressView()
-                            .progressViewStyle(CircularProgressViewStyle(tint: Theme.primaryEnd))
-                    } else {
-                        Image(systemName: "play.circle.fill")
-                            .font(.system(size: 28))
+                // Action buttons
+                HStack(spacing: 8) {
+                    // Add to playlist button
+                    Button {
+                        showAddToPlaylist = true
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 24))
                             .foregroundStyle(Theme.primaryGradient)
-                            .opacity(isPressed ? 1 : 0.7)
                     }
+                    .buttonStyle(.plain)
+                    
+                    // Play indicator
+                    ZStack {
+                        if isLoading {
+                            ProgressView()
+                                .progressViewStyle(CircularProgressViewStyle(tint: Theme.primaryEnd))
+                        } else {
+                            Image(systemName: "play.circle.fill")
+                                .font(.system(size: 28))
+                                .foregroundStyle(Theme.primaryGradient)
+                                .opacity(isPressed ? 1 : 0.7)
+                        }
+                    }
+                    .frame(width: 30, height: 30)
                 }
-                .frame(width: 30, height: 30)
             }
             .padding(12)
             .background(
@@ -478,6 +493,40 @@ struct SearchResultRow: View {
         }
         .disabled(isLoading)
         .buttonStyle(ScaleButtonStyle())
+        .contextMenu {
+            Button {
+                QueueService.shared.playNext(result)
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } label: {
+                Label("Play Next", systemImage: "text.line.first.and.arrowtriangle.forward")
+            }
+            
+            Button {
+                QueueService.shared.addToQueue(result)
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } label: {
+                Label("Add to Queue", systemImage: "text.badge.plus")
+            }
+            
+            Divider()
+            
+            Button {
+                showAddToPlaylist = true
+            } label: {
+                Label("Add to Playlist", systemImage: "music.note.list")
+            }
+            
+            Divider()
+            
+            if let url = URL(string: "https://youtube.com/watch?v=\(result.id)") {
+                ShareLink(item: url) {
+                    Label("Share", systemImage: "square.and.arrow.up")
+                }
+            }
+        }
+        .sheet(isPresented: $showAddToPlaylist) {
+            AddToPlaylistSheet(track: result, playlistService: PlaylistService.shared)
+        }
     }
     
     private var thumbnailPlaceholder: some View {

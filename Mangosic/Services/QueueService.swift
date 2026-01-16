@@ -224,9 +224,14 @@ final class QueueService: ObservableObject {
     private func shuffleQueue(keepCurrent: Bool) {
         guard !queue.isEmpty else { return }
         
+        // Save original order before shuffling (only save once)
+        if originalQueue.isEmpty || originalQueue.count != queue.count {
+            originalQueue = queue
+        }
+        
         if keepCurrent, let current = currentItem {
             // Remove current, shuffle rest, put current at front
-            var remaining = queue.filter { $0.id != current.id }
+            var remaining = queue.filter { $0.videoId != current.videoId }
             remaining.shuffle()
             queue = [current] + remaining
             currentIndex = 0
@@ -238,16 +243,22 @@ final class QueueService: ObservableObject {
     
     /// Restore original order
     private func unshuffleQueue() {
+        guard !originalQueue.isEmpty else { return }
         guard let current = currentItem else {
             queue = originalQueue
             currentIndex = 0
             return
         }
         
-        // Restore original order but maintain current position
-        queue = originalQueue
+        // Create a filtered originalQueue that only contains items currently in queue
+        let currentVideoIds = Set(queue.map { $0.videoId })
+        let filteredOriginal = originalQueue.filter { currentVideoIds.contains($0.videoId) }
         
-        if let newIndex = queue.firstIndex(where: { $0.id == current.id }) {
+        // Restore order from filtered original
+        queue = filteredOriginal
+        
+        // Find current item in restored queue by videoId
+        if let newIndex = queue.firstIndex(where: { $0.videoId == current.videoId }) {
             currentIndex = newIndex
         } else {
             currentIndex = 0

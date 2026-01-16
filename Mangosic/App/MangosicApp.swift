@@ -30,7 +30,7 @@ struct MangosicApp: App {
     
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            MainTabView()
                 .environmentObject(playerViewModel)
                 .environmentObject(deepLinkManager)
                 .environmentObject(queueService)

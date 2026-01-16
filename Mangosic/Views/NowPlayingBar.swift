@@ -45,6 +45,9 @@ struct NowPlayingBar: View {
             
             Spacer()
             
+            // Queue button
+            QueueButton(queueService: QueueService.shared, compact: true)
+            
             // Play/Pause button
             Button {
                 viewModel.togglePlayPause()

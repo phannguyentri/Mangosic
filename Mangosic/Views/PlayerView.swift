@@ -7,8 +7,15 @@ struct PlayerView: View {
     @Environment(\.dismiss) private var dismiss
     @ObservedObject private var qualitySettings = QualitySettings.shared
     @ObservedObject private var sleepTimerService = SleepTimerService.shared
+    @ObservedObject private var queueService = QueueService.shared
     @State private var isUpgradingQuality = false
     @State private var showingSleepTimer = false
+    @State private var showingAddToPlaylist = false
+    @State private var showingQueue = false
+    
+    // Skip indicator states
+    @State private var showSkipBackIndicator = false
+    @State private var showSkipForwardIndicator = false
     
     var body: some View {
         ZStack {
@@ -19,39 +26,55 @@ struct PlayerView: View {
                 // Top spacer to push content down and center vertically
                 Spacer(minLength: 20)
                 
-                // Video Player or Album Art
+                // Video Player or Album Art with Double-tap to skip
                 if viewModel.playbackMode == .video {
-                    ZStack(alignment: .topTrailing) {
+                    ZStack {
                         VideoPlayerView(player: viewModel.playerService.getPlayer())
                             .aspectRatio(16/9, contentMode: .fit)
                         
+                        // Double-tap zones overlay
+                        doubleTapZonesOverlay
+                        
                         // HD Toggle Button
-                        Button {
-                            toggleResolution()
-                        } label: {
-                            HStack(spacing: 4) {
-                                if isUpgradingQuality {
-                                    ProgressView()
-                                        .scaleEffect(0.6)
-                                        .tint(.white)
-                                } else {
-                                    Image(systemName: qualitySettings.isHighResolution ? "sparkles.tv.fill" : "play.rectangle")
-                                        .font(.system(size: 10, weight: .bold))
+                        VStack {
+                            HStack {
+                                Spacer()
+                                Button {
+                                    toggleResolution()
+                                } label: {
+                                    HStack(spacing: 4) {
+                                        if isUpgradingQuality {
+                                            ProgressView()
+                                                .scaleEffect(0.6)
+                                                .tint(.white)
+                                        } else {
+                                            Image(systemName: qualitySettings.isHighResolution ? "sparkles.tv.fill" : "play.rectangle")
+                                                .font(.system(size: 10, weight: .bold))
+                                        }
+                                        Text(qualitySettings.isHighResolution ? "HD" : (viewModel.currentTrack?.resolution ?? "SD"))
+                                            .font(.system(size: 11, weight: .bold))
+                                    }
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 8)
+                                    .padding(.vertical, 5)
+                                    .background(qualitySettings.isHighResolution ? Theme.primaryEnd : Color.black.opacity(0.7))
+                                    .cornerRadius(6)
                                 }
-                                Text(qualitySettings.isHighResolution ? "HD" : (viewModel.currentTrack?.resolution ?? "SD"))
-                                    .font(.system(size: 11, weight: .bold))
+                                .padding(12)
+                                .disabled(isUpgradingQuality)
                             }
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 5)
-                            .background(qualitySettings.isHighResolution ? Theme.primaryEnd : Color.black.opacity(0.7))
-                            .cornerRadius(6)
+                            Spacer()
                         }
-                        .padding(12)
-                        .disabled(isUpgradingQuality)
                     }
+                    .aspectRatio(16/9, contentMode: .fit)
                 } else {
-                    albumArtView
+                    ZStack {
+                        albumArtView
+                        
+                        // Double-tap zones overlay for audio mode
+                        doubleTapZonesOverlay
+                    }
+                    .frame(height: 320)
                 }
                 
                 Spacer(minLength: 16)
@@ -93,16 +116,42 @@ struct PlayerView: View {
             }
             
             ToolbarItem(placement: .navigationBarTrailing) {
-                Button {
-                    viewModel.stop()
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white)
-                        .frame(width: 40, height: 40)
-                        .background(Color.white.opacity(0.1))
-                        .clipShape(Circle())
+                HStack(spacing: 8) {
+                    // Add to Playlist button
+                    Button {
+                        showingAddToPlaylist = true
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } label: {
+                        Image(systemName: "plus.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundStyle(Theme.primaryGradient)
+                    }
+                    
+                    // Queue button
+                    Button {
+                        showingQueue = true
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+                    } label: {
+                        Image(systemName: "list.bullet")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 40, height: 40)
+                            .background(Color.white.opacity(0.1))
+                            .clipShape(Circle())
+                    }
+                    
+                    // Close button
+                    Button {
+                        viewModel.stop()
+                        dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 18, weight: .semibold))
+                            .foregroundColor(.white)
+                            .frame(width: 40, height: 40)
+                            .background(Color.white.opacity(0.1))
+                            .clipShape(Circle())
+                    }
                 }
             }
         }
@@ -111,6 +160,18 @@ struct PlayerView: View {
             SleepTimerSheet()
                 .presentationDetents([.medium])
                 .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showingQueue) {
+            QueueView(queueService: QueueService.shared)
+                .environmentObject(viewModel)
+        }
+        .sheet(isPresented: $showingAddToPlaylist) {
+            if let track = viewModel.currentTrack {
+                AddToPlaylistSheet(
+                    track: track,
+                    playlistService: PlaylistService.shared
+                )
+            }
         }
     }
     
@@ -245,15 +306,15 @@ struct PlayerView: View {
             }
             .frame(maxWidth: .infinity)
             
-            // Rewind 10s
+            // Previous Track
             Button {
-                let newTime = max(0, viewModel.currentTime - 10)
-                viewModel.playerService.seek(to: newTime)
+                playPreviousTrack()
             } label: {
-                Image(systemName: "gobackward.10")
+                Image(systemName: "backward.fill")
                     .font(.title)
-                    .foregroundColor(.white)
+                    .foregroundColor(hasPreviousTrack ? .white : .gray.opacity(0.4))
             }
+            .disabled(!hasPreviousTrack)
             .frame(maxWidth: .infinity)
             
             // Play/Pause
@@ -279,15 +340,15 @@ struct PlayerView: View {
             .disabled(viewModel.isLoading)
             .frame(maxWidth: .infinity)
             
-            // Forward 10s
+            // Next Track
             Button {
-                let newTime = min(viewModel.duration, viewModel.currentTime + 10)
-                viewModel.playerService.seek(to: newTime)
+                playNextTrack()
             } label: {
-                Image(systemName: "goforward.10")
+                Image(systemName: "forward.fill")
                     .font(.title)
-                    .foregroundColor(.white)
+                    .foregroundColor(hasNextTrack ? .white : .gray.opacity(0.4))
             }
+            .disabled(!hasNextTrack)
             .frame(maxWidth: .infinity)
             
             // Repeat button
@@ -302,6 +363,40 @@ struct PlayerView: View {
             .frame(maxWidth: .infinity)
         }
         .padding(.horizontal, 8)
+    }
+    
+    // MARK: - Queue Navigation
+    
+    private var hasPreviousTrack: Bool {
+        queueService.currentIndex > 0
+    }
+    
+    private var hasNextTrack: Bool {
+        queueService.currentIndex < queueService.queue.count - 1
+    }
+    
+    private func playPreviousTrack() {
+        guard hasPreviousTrack else { return }
+        queueService.previous()
+        if let item = queueService.currentItem {
+            viewModel.urlInput = item.videoId
+            Task {
+                await viewModel.loadAndPlay()
+            }
+        }
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+    }
+    
+    private func playNextTrack() {
+        guard hasNextTrack else { return }
+        queueService.next()
+        if let item = queueService.currentItem {
+            viewModel.urlInput = item.videoId
+            Task {
+                await viewModel.loadAndPlay()
+            }
+        }
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
     
     private var modeSwitcher: some View {
@@ -354,6 +449,110 @@ struct PlayerView: View {
             await viewModel.reloadWithQuality(seekTime: currentTime)
             isUpgradingQuality = false
         }
+    }
+    
+    // MARK: - Double-tap Skip Zones
+    
+    private var doubleTapZonesOverlay: some View {
+        GeometryReader { geometry in
+            HStack(spacing: 0) {
+                // Left zone - skip backward
+                Rectangle()
+                    .fill(Color.clear)
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) {
+                        skipBackward()
+                    }
+                    .overlay {
+                        // Skip indicator
+                        if showSkipBackIndicator {
+                            SkipIndicatorView(isForward: false)
+                                .transition(.opacity.combined(with: .scale))
+                        }
+                    }
+                
+                // Right zone - skip forward
+                Rectangle()
+                    .fill(Color.clear)
+                    .contentShape(Rectangle())
+                    .onTapGesture(count: 2) {
+                        skipForward()
+                    }
+                    .overlay {
+                        // Skip indicator
+                        if showSkipForwardIndicator {
+                            SkipIndicatorView(isForward: true)
+                                .transition(.opacity.combined(with: .scale))
+                        }
+                    }
+            }
+        }
+    }
+    
+    private func skipBackward() {
+        let newTime = max(0, viewModel.currentTime - 10)
+        viewModel.playerService.seek(to: newTime)
+        
+        // Show indicator
+        withAnimation(.easeOut(duration: 0.2)) {
+            showSkipBackIndicator = true
+        }
+        
+        // Hide after delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            withAnimation(.easeOut(duration: 0.2)) {
+                showSkipBackIndicator = false
+            }
+        }
+        
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+    
+    private func skipForward() {
+        let newTime = min(viewModel.duration, viewModel.currentTime + 10)
+        viewModel.playerService.seek(to: newTime)
+        
+        // Show indicator
+        withAnimation(.easeOut(duration: 0.2)) {
+            showSkipForwardIndicator = true
+        }
+        
+        // Hide after delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            withAnimation(.easeOut(duration: 0.2)) {
+                showSkipForwardIndicator = false
+            }
+        }
+        
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+}
+
+// MARK: - Skip Indicator View
+
+struct SkipIndicatorView: View {
+    let isForward: Bool
+    
+    var body: some View {
+        HStack(spacing: 4) {
+            if !isForward {
+                Image(systemName: "gobackward.10")
+                    .font(.system(size: 24, weight: .bold))
+            }
+            
+            Text("10s")
+                .font(.system(size: 14, weight: .bold))
+            
+            if isForward {
+                Image(systemName: "goforward.10")
+                    .font(.system(size: 24, weight: .bold))
+            }
+        }
+        .foregroundColor(.white)
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(Color.black.opacity(0.6))
+        .cornerRadius(20)
     }
 }
 

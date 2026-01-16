@@ -31,6 +31,17 @@
 		2D0000010000000000000021 /* SleepTimerService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000021 /* SleepTimerService.swift */; };
 		2D0000010000000000000022 /* SleepTimerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000022 /* SleepTimerView.swift */; };
 		2D0000010000000000000023 /* DeepLinkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000023 /* DeepLinkManager.swift */; };
+		2D0000010000000000000024 /* PlaylistModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000024 /* PlaylistModels.swift */; };
+		2D0000010000000000000025 /* QueueService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000025 /* QueueService.swift */; };
+		2D0000010000000000000026 /* HistoryService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000026 /* HistoryService.swift */; };
+		2D0000010000000000000027 /* PlaylistService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000027 /* PlaylistService.swift */; };
+		2D0000010000000000000028 /* QueueView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000028 /* QueueView.swift */; };
+		2D0000010000000000000029 /* QueueComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000029 /* QueueComponents.swift */; };
+		2D0000010000000000000030 /* TrackContextMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000030 /* TrackContextMenu.swift */; };
+		2D0000010000000000000031 /* MainTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000031 /* MainTabView.swift */; };
+		2D0000010000000000000032 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000032 /* LibraryView.swift */; };
+		2D0000010000000000000033 /* RecentlyPlayedListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000033 /* RecentlyPlayedListView.swift */; };
+		2D0000010000000000000034 /* PlaylistDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000034 /* PlaylistDetailView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -82,6 +93,17 @@
 		2D0000020000000000000021 /* SleepTimerService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepTimerService.swift; sourceTree = "<group>"; };
 		2D0000020000000000000022 /* SleepTimerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SleepTimerView.swift; sourceTree = "<group>"; };
 		2D0000020000000000000023 /* DeepLinkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkManager.swift; sourceTree = "<group>"; };
+		2D0000020000000000000024 /* PlaylistModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistModels.swift; sourceTree = "<group>"; };
+		2D0000020000000000000025 /* QueueService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueService.swift; sourceTree = "<group>"; };
+		2D0000020000000000000026 /* HistoryService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryService.swift; sourceTree = "<group>"; };
+		2D0000020000000000000027 /* PlaylistService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistService.swift; sourceTree = "<group>"; };
+		2D0000020000000000000028 /* QueueView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueView.swift; sourceTree = "<group>"; };
+		2D0000020000000000000029 /* QueueComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QueueComponents.swift; sourceTree = "<group>"; };
+		2D0000020000000000000030 /* TrackContextMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TrackContextMenu.swift; sourceTree = "<group>"; };
+		2D0000020000000000000031 /* MainTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabView.swift; sourceTree = "<group>"; };
+		2D0000020000000000000032 /* LibraryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LibraryView.swift; sourceTree = "<group>"; };
+		2D0000020000000000000033 /* RecentlyPlayedListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentlyPlayedListView.swift; sourceTree = "<group>"; };
+		2D0000020000000000000034 /* PlaylistDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaylistDetailView.swift; sourceTree = "<group>"; };
 		2D0000030000000000000001 /* Mangosic.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mangosic.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -163,6 +185,8 @@
 			isa = PBXGroup;
 			children = (
 				2D0000050000000000000020 /* Components */,
+				2D0000050000000000000021 /* Queue */,
+				2D0000050000000000000022 /* Library */,
 				2D0000020000000000000002 /* ContentView.swift */,
 				2D0000020000000000000003 /* PlayerView.swift */,
 				2D0000020000000000000004 /* VideoPlayerView.swift */,
@@ -170,6 +194,7 @@
 				2D0000020000000000000013 /* MangosicBackground.swift */,
 				2D0000020000000000000017 /* SearchView.swift */,
 				2D0000020000000000000019 /* SettingsView.swift */,
+				2D0000020000000000000031 /* MainTabView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -191,6 +216,9 @@
 				2D0000020000000000000015 /* YouTubeSearchService.swift */,
 				2D0000020000000000000021 /* SleepTimerService.swift */,
 				2D0000020000000000000023 /* DeepLinkManager.swift */,
+				2D0000020000000000000025 /* QueueService.swift */,
+				2D0000020000000000000026 /* HistoryService.swift */,
+				2D0000020000000000000027 /* PlaylistService.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -202,6 +230,7 @@
 				2D0000020000000000000014 /* SearchResult.swift */,
 				2D0000020000000000000018 /* QualitySettings.swift */,
 				2D0000020000000000000020 /* SleepTimerOption.swift */,
+				2D0000020000000000000024 /* PlaylistModels.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -218,8 +247,28 @@
 			isa = PBXGroup;
 			children = (
 				2D0000020000000000000022 /* SleepTimerView.swift */,
+				2D0000020000000000000029 /* QueueComponents.swift */,
+				2D0000020000000000000030 /* TrackContextMenu.swift */,
 			);
 			path = Components;
+			sourceTree = "<group>";
+		};
+		2D0000050000000000000021 /* Queue */ = {
+			isa = PBXGroup;
+			children = (
+				2D0000020000000000000028 /* QueueView.swift */,
+			);
+			path = Queue;
+			sourceTree = "<group>";
+		};
+		2D0000050000000000000022 /* Library */ = {
+			isa = PBXGroup;
+			children = (
+				2D0000020000000000000032 /* LibraryView.swift */,
+				2D0000020000000000000033 /* RecentlyPlayedListView.swift */,
+				2D0000020000000000000034 /* PlaylistDetailView.swift */,
+			);
+			path = Library;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -360,6 +409,17 @@
 				2D0000010000000000000021 /* SleepTimerService.swift in Sources */,
 				2D0000010000000000000022 /* SleepTimerView.swift in Sources */,
 				2D0000010000000000000023 /* DeepLinkManager.swift in Sources */,
+				2D0000010000000000000024 /* PlaylistModels.swift in Sources */,
+				2D0000010000000000000025 /* QueueService.swift in Sources */,
+				2D0000010000000000000026 /* HistoryService.swift in Sources */,
+				2D0000010000000000000027 /* PlaylistService.swift in Sources */,
+				2D0000010000000000000028 /* QueueView.swift in Sources */,
+				2D0000010000000000000029 /* QueueComponents.swift in Sources */,
+				2D0000010000000000000030 /* TrackContextMenu.swift in Sources */,
+				2D0000010000000000000031 /* MainTabView.swift in Sources */,
+				2D0000010000000000000032 /* LibraryView.swift in Sources */,
+				2D0000010000000000000033 /* RecentlyPlayedListView.swift in Sources */,
+				2D0000010000000000000034 /* PlaylistDetailView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
