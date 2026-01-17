@@ -59,6 +59,7 @@ class PlayerViewModel: ObservableObject {
            targetID == currentTrack.id {
             print("▶️ Video \(targetID) is already loaded. Opening player.")
             showingPlayer = true
+            urlInput = "" // Clear input to keep UI clean
             return
         }
         
@@ -86,6 +87,7 @@ class PlayerViewModel: ObservableObject {
             isExtracting = false
             playerService.play(track, mode: selectedMode)
             showingPlayer = true
+            urlInput = "" // Clear input on successful load
         } catch {
             isExtracting = false
             showError(message: error.localizedDescription)
