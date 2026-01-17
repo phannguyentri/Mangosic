@@ -20,8 +20,12 @@ struct PlayerView: View {
     // Fullscreen video state
     @State private var showFullscreenVideo = false
     
+    // Drag gesture state
+    @State private var dragOffset: CGSize = .zero
+    
     var body: some View {
-        ZStack {
+        NavigationStack {
+            ZStack {
             // Background
             MangosicBackground()
             
@@ -130,6 +134,8 @@ struct PlayerView: View {
             }
             .padding(.horizontal, 0) // Ensure no extra padding on outer VStack
         }
+        // Drag to dismiss gesture
+
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarLeading) {
@@ -186,6 +192,33 @@ struct PlayerView: View {
             }
         }
         .navigationBarBackButtonHidden(true)
+        }
+        // Drag to dismiss gesture
+        .offset(y: max(0, dragOffset.height))
+        // Fade out as we drag down
+        .opacity(1.0 - (Double(max(0, dragOffset.height)) / 600.0))
+        .gesture(
+            DragGesture()
+                .onChanged { gesture in
+                    // Only allow dragging down
+                    if gesture.translation.height > 0 {
+                        dragOffset = gesture.translation
+                    }
+                }
+                .onEnded { gesture in
+                    // Threshold for dismissal: 150pt drag or high velocity
+                    if gesture.translation.height > 150 || gesture.velocity.height > 1000 {
+                        dismiss()
+                    } else {
+                        // Snap back if threshold not met
+                        withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                            dragOffset = .zero
+                        }
+                    }
+                }
+        )
+        // Smooth animation for the drag offset
+        .animation(.interactiveSpring(), value: dragOffset)
         .sheet(isPresented: $showingSleepTimer) {
             SleepTimerSheet()
                 .presentationDetents([.medium])

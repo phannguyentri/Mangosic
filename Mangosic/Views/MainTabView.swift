@@ -49,9 +49,7 @@ struct MainTabView: View {
             }
         }
         .fullScreenCover(isPresented: $playerViewModel.showingPlayer) {
-            NavigationStack {
-                PlayerView(viewModel: playerViewModel)
-            }
+            PlayerView(viewModel: playerViewModel)
         }
         .preferredColorScheme(.dark)
     }
