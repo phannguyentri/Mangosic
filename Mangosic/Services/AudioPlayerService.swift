@@ -405,14 +405,15 @@ class AudioPlayerService: ObservableObject {
                     // Seek to specified time if provided (e.g., when switching modes)
                     if let seekTo = seekTime, seekTo > 0 {
                         let cmTime = CMTime(seconds: seekTo, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-                        self?.player?.seek(to: cmTime) { _ in
-                            self?.player?.play()
+                        self?.player?.seek(to: cmTime, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+                            // Always try to play after seek, regardless of seek success
+                            self?.player?.playImmediately(atRate: 1.0)
                             self?.state = .playing
                             self?.currentTime = seekTo
                             self?.updateNowPlayingInfo()
                         }
                     } else {
-                        self?.player?.play()
+                        self?.player?.playImmediately(atRate: 1.0)
                         self?.state = .playing
                         self?.updateNowPlayingInfo()
                     }
@@ -742,14 +743,14 @@ class AudioPlayerService: ObservableObject {
                     case .readyToPlay:
                         if let seekTo = seekTime, seekTo > 0 {
                             let cmTime = CMTime(seconds: seekTo, preferredTimescale: CMTimeScale(NSEC_PER_SEC))
-                            self.player?.seek(to: cmTime) { _ in
-                                self.player?.play()
-                                self.state = .playing
-                                self.currentTime = seekTo
-                                self.updateNowPlayingInfo()
+                            self.player?.seek(to: cmTime, toleranceBefore: .zero, toleranceAfter: .zero) { [weak self] _ in
+                                self?.player?.playImmediately(atRate: 1.0)
+                                self?.state = .playing
+                                self?.currentTime = seekTo
+                                self?.updateNowPlayingInfo()
                             }
                         } else {
-                            self.player?.play()
+                            self.player?.playImmediately(atRate: 1.0)
                             self.state = .playing
                             self.updateNowPlayingInfo()
                         }

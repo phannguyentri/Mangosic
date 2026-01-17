@@ -120,7 +120,12 @@ class PlayerViewModel: ObservableObject {
         
         // Fallback: reload with seekTime if streams are different
         let currentSeekTime = currentTime
-        playerService.play(track, mode: mode, seekTime: currentSeekTime)
+        
+        // Add a small delay to ensure VideoPlayerView is fully dismantled and doesn't interfere
+        // with the new playback request. This prevents the "stop after switch" issue.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+            self?.playerService.play(track, mode: mode, seekTime: currentSeekTime)
+        }
     }
     
     /// Reload current track with updated quality settings

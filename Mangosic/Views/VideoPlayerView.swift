@@ -72,6 +72,11 @@ struct VideoPlayerView: UIViewControllerRepresentable {
             uiViewController.player = player
         }
     }
+    
+    static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: ()) {
+        // Explicitly detach player when view is destroyed
+        uiViewController.player = nil
+    }
 }
 
 /// Custom UIView that hosts AVPlayerLayer directly - no gestures at all
