@@ -2,6 +2,7 @@ import Foundation
 import AVFoundation
 import MediaPlayer
 import Combine
+import UIKit
 
 /// Service for managing audio/video playback with AVPlayer
 @MainActor
@@ -27,6 +28,10 @@ class AudioPlayerService: ObservableObject {
     private var cachedArtworkTrackId: String? // Track ID for cached artwork
     private var isLoadingArtwork: Bool = false // Prevent multiple concurrent downloads
     
+    // Background playback support
+    private var wasPlayingBeforeInterruption: Bool = false
+    private var backgroundPlayerLayer: AVPlayerLayer?
+    
     var progress: Double {
         guard duration > 0 else { return 0 }
         return currentTime / duration
@@ -37,6 +42,7 @@ class AudioPlayerService: ObservableObject {
         setupAudioSession()
         setupRemoteTransportControls()
         setupEndOfTrackObserver()
+        setupBackgroundPlayback()
     }
     
     // MARK: - Audio Session Setup
@@ -102,6 +108,148 @@ class AudioPlayerService: ObservableObject {
             // Replay the current track
             seek(to: 0)
             resume()
+        }
+    }
+    
+    // MARK: - Background Playback Setup
+    private func setupBackgroundPlayback() {
+        // Stage 1: Save playing state BEFORE iOS auto-pauses (willResignActive)
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.willResignActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.handleWillResignActive()
+            }
+        }
+        
+        // Stage 2: Resume playback AFTER iOS has auto-paused (didEnterBackground)
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.didEnterBackgroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.handleDidEnterBackground()
+            }
+        }
+        
+        // Handle app returning to foreground
+        NotificationCenter.default.addObserver(
+            forName: UIApplication.willEnterForegroundNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.handleEnterForeground()
+            }
+        }
+        
+        // Handle audio session interruptions (phone calls, alarms, etc.)
+        NotificationCenter.default.addObserver(
+            forName: AVAudioSession.interruptionNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] notification in
+            Task { @MainActor in
+                self?.handleAudioSessionInterruption(notification)
+            }
+        }
+    }
+    
+    /// Stage 1: Save state before iOS pauses the player
+    private func handleWillResignActive() {
+        // Capture playing state BEFORE iOS auto-pauses
+        wasPlayingBeforeInterruption = state.isPlaying
+        print("📱 Will resign active - wasPlaying: \(wasPlayingBeforeInterruption)")
+    }
+    
+    /// Stage 2: Resume playback AFTER iOS has auto-paused (didEnterBackground)
+    private func handleDidEnterBackground() {
+        print("🔒 App did enter background - checking playback status")
+        
+        // Note: Do NOT update wasPlayingBeforeInterruption here.
+        // iOS might have already paused the player, so we rely on the value
+        // captured in handleWillResignActive.
+        
+        // If playing, we need to override iOS's auto-pause behavior for video
+        // iOS automatically pauses AVPlayer with video track when entering background
+        // The trick is to call play() AFTER iOS has paused it
+        if wasPlayingBeforeInterruption {
+            do {
+                let session = AVAudioSession.sharedInstance()
+                try session.setActive(true)
+                print("✅ Audio session activated for background")
+            } catch {
+                print("❌ Failed to activate audio session: \(error)")
+            }
+            
+            // Use multiple delayed attempts to resume playback after iOS pauses
+            // iOS pauses the player after app enters background, so we resume it
+            for delay in [0.1, 0.3, 0.5, 1.0] {
+                DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                    guard let self = self, self.wasPlayingBeforeInterruption else { return }
+                    
+                    // Check if iOS paused our player and resume it
+                    if self.player?.rate == 0 && self.state.isPlaying {
+                        self.player?.play()
+                        print("▶️ Resumed playback in background (delay: \(delay)s)")
+                    }
+                }
+            }
+        }
+    }
+    
+    /// Handle app returning to foreground
+    private func handleEnterForeground() {
+        print("👀 App entering foreground")
+        
+        // If we were playing before background, ensure we're still playing
+        if wasPlayingBeforeInterruption {
+            if player?.rate == 0 {
+                player?.play()
+                state = .playing
+                print("▶️ Resumed playback after foreground")
+            }
+            updateNowPlayingInfo()
+        }
+    }
+    
+    /// Handle audio session interruptions (phone calls, alarms)
+    private func handleAudioSessionInterruption(_ notification: Notification) {
+        guard let userInfo = notification.userInfo,
+              let typeValue = userInfo[AVAudioSessionInterruptionTypeKey] as? UInt,
+              let type = AVAudioSession.InterruptionType(rawValue: typeValue) else {
+            return
+        }
+        
+        switch type {
+        case .began:
+            // Audio was interrupted (e.g., phone call)
+            print("⚠️ Audio session interrupted")
+            wasPlayingBeforeInterruption = state.isPlaying
+            pause()
+            
+        case .ended:
+            // Interruption ended
+            print("✅ Audio interruption ended")
+            if let optionsValue = userInfo[AVAudioSessionInterruptionOptionKey] as? UInt {
+                let options = AVAudioSession.InterruptionOptions(rawValue: optionsValue)
+                if options.contains(.shouldResume) && wasPlayingBeforeInterruption {
+                    // Re-activate audio session and resume
+                    do {
+                        try AVAudioSession.sharedInstance().setActive(true)
+                        resume()
+                        print("▶️ Resumed playback after interruption")
+                    } catch {
+                        print("❌ Failed to resume after interruption: \(error)")
+                    }
+                }
+            }
+            
+        @unknown default:
+            break
         }
     }
     

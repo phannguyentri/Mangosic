@@ -2,11 +2,63 @@ import SwiftUI
 import AVKit
 
 /// Video player wrapper for SwiftUI
+/// Custom AVPlayerViewController that handles background playback correctly
+class BackgroundFriendlyAVPlayerViewController: AVPlayerViewController {
+    var storedPlayer: AVPlayer?
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        // Prevent player view controller from managing audio session and now playing info
+        // We handle this manually in AudioPlayerService
+        self.updatesNowPlayingInfoCenter = false
+        
+        // Observe background/foreground events
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleEnterBackground),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleEnterForeground),
+            name: UIApplication.willEnterForegroundNotification,
+            object: nil
+        )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func handleEnterBackground() {
+        // Detach player from view controller to prevent auto-pause
+        // But keep a reference to it
+        if player != nil {
+            print("📺 VideoPlayerView: Detaching player for background playback")
+            storedPlayer = player
+            player = nil
+        }
+    }
+    
+    @objc private func handleEnterForeground() {
+        // Re-attach player when returning to foreground
+        if let stored = storedPlayer {
+            print("📺 VideoPlayerView: Re-attaching player")
+            player = stored
+            storedPlayer = nil
+        }
+    }
+}
+
+/// Video player wrapper for SwiftUI
 struct VideoPlayerView: UIViewControllerRepresentable {
     let player: AVPlayer?
     
     func makeUIViewController(context: Context) -> AVPlayerViewController {
-        let controller = AVPlayerViewController()
+        let controller = BackgroundFriendlyAVPlayerViewController()
         controller.player = player
         controller.showsPlaybackControls = false  // We use custom controls
         controller.videoGravity = .resizeAspect
@@ -14,7 +66,11 @@ struct VideoPlayerView: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-        uiViewController.player = player
+        // Only update if not in background "detached" state
+        if let customController = uiViewController as? BackgroundFriendlyAVPlayerViewController, 
+           customController.storedPlayer == nil {
+            uiViewController.player = player
+        }
     }
 }
 

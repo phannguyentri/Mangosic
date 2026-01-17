@@ -8,7 +8,7 @@ struct NativeFullscreenPlayer: UIViewControllerRepresentable {
     @Binding var isPresented: Bool
     
     func makeUIViewController(context: Context) -> AVPlayerViewController {
-        let controller = AVPlayerViewController()
+        let controller = BackgroundFriendlyAVPlayerViewController()
         controller.player = player
         controller.delegate = context.coordinator
         controller.allowsPictureInPicturePlayback = true
@@ -23,7 +23,11 @@ struct NativeFullscreenPlayer: UIViewControllerRepresentable {
     }
     
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-        uiViewController.player = player
+        // Only update if not in background "detached" state
+        if let customController = uiViewController as? BackgroundFriendlyAVPlayerViewController, 
+           customController.storedPlayer == nil {
+            uiViewController.player = player
+        }
     }
     
     func makeCoordinator() -> Coordinator {
@@ -63,24 +67,6 @@ struct FullscreenVideoPlayerView: View {
                 isPresented: $isPresented
             )
             .ignoresSafeArea()
-            
-            // Close button overlay (top-left)
-            VStack {
-                HStack {
-                    Button {
-                        isPresented = false
-                    } label: {
-                        Image(systemName: "xmark.circle.fill")
-                            .font(.system(size: 30))
-                            .foregroundStyle(.white.opacity(0.8), .black.opacity(0.5))
-                    }
-                    .padding(.leading, 20)
-                    .padding(.top, 20)
-                    
-                    Spacer()
-                }
-                Spacer()
-            }
         }
         .onAppear {
             // Lock to landscape
