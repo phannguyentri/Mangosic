@@ -5,7 +5,8 @@ struct NowPlayingBar: View {
     @ObservedObject var viewModel: PlayerViewModel
     @State private var thumbnailImage: UIImage?
     @State private var isLoadingThumbnail: Bool = false
-    
+    @State private var offset: CGFloat = 0
+
     var body: some View {
         HStack(spacing: 12) {
             // Thumbnail - manually loaded for reliability (AsyncImage was unreliable)
@@ -66,9 +67,39 @@ struct NowPlayingBar: View {
                         .fill(.ultraThinMaterial)
                 )
         )
+        .offset(x: offset)
         .onTapGesture {
             viewModel.showingPlayer = true
         }
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    // Only allow dragging left
+                    if value.translation.width < 0 {
+                        offset = value.translation.width
+                    }
+                }
+                .onEnded { value in
+                    // Swipe left to dismiss (stop playback)
+                    if value.translation.width < -80 {
+                        withAnimation(.easeOut(duration: 0.2)) {
+                            offset = -UIScreen.main.bounds.width
+                        }
+                        
+                        // Delay actual stop slightly to allow animation to start
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                            withAnimation {
+                                viewModel.stop()
+                                offset = 0
+                            }
+                        }
+                    } else {
+                        withAnimation(.spring()) {
+                            offset = 0
+                        }
+                    }
+                }
+        )
         .onAppear {
             loadThumbnail()
         }
