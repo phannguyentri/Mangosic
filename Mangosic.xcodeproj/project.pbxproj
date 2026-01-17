@@ -42,6 +42,7 @@
 		2D0000010000000000000032 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000032 /* LibraryView.swift */; };
 		2D0000010000000000000033 /* RecentlyPlayedListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000033 /* RecentlyPlayedListView.swift */; };
 		2D0000010000000000000034 /* PlaylistDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000034 /* PlaylistDetailView.swift */; };
+		59A742D086C7D53F2B710512 /* FullscreenVideoPlayerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 276E4C948303289A30E6AE40 /* FullscreenVideoPlayerView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -70,6 +71,7 @@
 
 /* Begin PBXFileReference section */
 		11C5670D2F1948BD0024BEEF /* MangosicShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MangosicShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		276E4C948303289A30E6AE40 /* FullscreenVideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FullscreenVideoPlayerView.swift; path = Mangosic/Views/FullscreenVideoPlayerView.swift; sourceTree = SOURCE_ROOT; };
 		2D0000020000000000000001 /* MangosicApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangosicApp.swift; sourceTree = "<group>"; };
 		2D0000020000000000000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		2D0000020000000000000003 /* PlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlayerView.swift; sourceTree = "<group>"; };
@@ -108,7 +110,7 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
-		11C5671B2F1948BE0024BEEF /* PBXFileSystemSynchronizedBuildFileExceptionSet */ = {
+		11C5671B2F1948BE0024BEEF = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
 				Info.plist,
@@ -118,7 +120,7 @@
 /* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		11C5670E2F1948BD0024BEEF /* MangosicShareExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (11C5671B2F1948BE0024BEEF /* PBXFileSystemSynchronizedBuildFileExceptionSet */, ); explicitFileTypes = {}; explicitFolders = (); path = MangosicShareExtension; sourceTree = "<group>"; };
+		11C5670E2F1948BD0024BEEF /* MangosicShareExtension */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (11C5671B2F1948BE0024BEEF, ); explicitFileTypes = {}; explicitFolders = (); path = MangosicShareExtension; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -146,6 +148,7 @@
 				2D0000050000000000000002 /* Mangosic */,
 				11C5670E2F1948BD0024BEEF /* MangosicShareExtension */,
 				2D0000050000000000000003 /* Products */,
+				276E4C948303289A30E6AE40 /* FullscreenVideoPlayerView.swift */,
 			);
 			sourceTree = "<group>";
 		};
@@ -420,6 +423,7 @@
 				2D0000010000000000000032 /* LibraryView.swift in Sources */,
 				2D0000010000000000000033 /* RecentlyPlayedListView.swift in Sources */,
 				2D0000010000000000000034 /* PlaylistDetailView.swift in Sources */,
+				59A742D086C7D53F2B710512 /* FullscreenVideoPlayerView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -17,6 +17,9 @@ struct PlayerView: View {
     @State private var showSkipBackIndicator = false
     @State private var showSkipForwardIndicator = false
     
+    // Fullscreen video state
+    @State private var showFullscreenVideo = false
+    
     var body: some View {
         ZStack {
             // Background
@@ -64,6 +67,33 @@ struct PlayerView: View {
                                 .disabled(isUpgradingQuality)
                             }
                             Spacer()
+                        }
+                        
+                        // Fullscreen Button - Bottom Right
+                        VStack {
+                            Spacer()
+                            HStack {
+                                Spacer()
+                                Button {
+                                    showFullscreenVideo = true
+                                    UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                                } label: {
+                                    Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundColor(.white)
+                                        .frame(width: 40, height: 40)
+                                        .background(
+                                            Circle()
+                                                .fill(.ultraThinMaterial.opacity(0.7))
+                                                .overlay(
+                                                    Circle()
+                                                        .strokeBorder(Color.white.opacity(0.15), lineWidth: 1)
+                                                )
+                                        )
+                                        .shadow(color: .black.opacity(0.3), radius: 4, y: 2)
+                                }
+                                .padding(12)
+                            }
                         }
                     }
                     .aspectRatio(16/9, contentMode: .fit)
@@ -172,6 +202,12 @@ struct PlayerView: View {
                     playlistService: PlaylistService.shared
                 )
             }
+        }
+        .fullScreenCover(isPresented: $showFullscreenVideo) {
+            FullscreenVideoPlayerView(
+                viewModel: viewModel,
+                isPresented: $showFullscreenVideo
+            )
         }
     }
     

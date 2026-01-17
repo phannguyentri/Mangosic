@@ -1,8 +1,20 @@
 import SwiftUI
 import SwiftData
 
+// MARK: - AppDelegate for orientation control
+class AppDelegate: NSObject, UIApplicationDelegate {
+    /// Lock orientation for fullscreen video
+    var orientationLock: UIInterfaceOrientationMask = .all
+    
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+        return orientationLock
+    }
+}
+
 @main
 struct MangosicApp: App {
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
+    
     @StateObject private var playerViewModel = PlayerViewModel()
     @StateObject private var deepLinkManager = DeepLinkManager()
     @StateObject private var queueService = QueueService.shared
