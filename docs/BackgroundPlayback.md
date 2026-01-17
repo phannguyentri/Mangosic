@@ -90,3 +90,51 @@ DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
 **Issue**: Player UI shows "Playing" but no sound after switching modes.
 - **Cause**: Race condition where `seek` completion handler failed or player state desynced.
 - **Fix**: Ensure `playImmediately(atRate: 1.0)` is used instead of simple `play()`, and tolerance is set to `.zero`.
+
+## 6. Picture-in-Picture (PiP) Support
+
+Mangosic supports automatic Picture-in-Picture when the user swipes to Home while video is playing.
+
+### 6.1. Requirements
+
+- **iOS 14.2+** for automatic PiP (`canStartPictureInPictureAutomaticallyFromInline`)
+- **Background Modes**: Must include both `audio` and `picture-in-picture` in `Info.plist`
+
+### 6.2. Implementation
+
+PiP is enabled via `AVPlayerViewController` configuration:
+
+```swift
+controller.allowsPictureInPicturePlayback = true
+
+// Enable automatic PiP when swiping to Home (iOS 14.2+)
+if #available(iOS 14.2, *) {
+    controller.canStartPictureInPictureAutomaticallyFromInline = true
+}
+```
+
+### 6.3. PiP vs Background Audio
+
+When video PiP is enabled:
+- **Swipe to Home** → iOS automatically activates PiP window
+- **PiP window close** → Video pauses (unless user taps play in app)
+
+When PiP is NOT used (audio-only mode):
+- **Swipe to Home** → Audio continues via background playback
+- **Lock screen** → Audio continues with Now Playing controls
+
+### 6.4. Key Configuration
+
+In `Info.plist`:
+```xml
+<key>UIBackgroundModes</key>
+<array>
+    <string>audio</string>
+    <string>picture-in-picture</string>
+</array>
+```
+
+In `VideoPlayerView.swift` and `FullscreenVideoPlayerView.swift`:
+- `allowsPictureInPicturePlayback = true`
+- `canStartPictureInPictureAutomaticallyFromInline = true` (iOS 14.2+)
+

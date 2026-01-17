@@ -34,10 +34,18 @@ class BackgroundFriendlyAVPlayerViewController: AVPlayerViewController {
     }
     
     @objc private func handleEnterBackground() {
+        // When PiP is enabled, iOS handles the background transition automatically
+        // We only need to detach player for audio-only background playback
+        // If PiP is allowed, don't detach - let iOS manage the PiP session
+        if self.allowsPictureInPicturePlayback {
+            print("📺 VideoPlayerView: PiP enabled, letting iOS manage background transition")
+            return
+        }
+        
         // Detach player from view controller to prevent auto-pause
-        // But keep a reference to it
+        // But keep a reference to it (only for pure audio background playback)
         if player != nil {
-            print("📺 VideoPlayerView: Detaching player for background playback")
+            print("📺 VideoPlayerView: Detaching player for background audio playback")
             storedPlayer = player
             player = nil
         }
@@ -62,6 +70,15 @@ struct VideoPlayerView: UIViewControllerRepresentable {
         controller.player = player
         controller.showsPlaybackControls = false  // We use custom controls
         controller.videoGravity = .resizeAspect
+        
+        // Enable PiP
+        controller.allowsPictureInPicturePlayback = true
+        
+        // Enable automatic PiP when swiping to Home (iOS 14.2+)
+        if #available(iOS 14.2, *) {
+            controller.canStartPictureInPictureAutomaticallyFromInline = true
+        }
+        
         return controller
     }
     

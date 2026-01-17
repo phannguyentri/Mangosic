@@ -15,6 +15,11 @@ struct NativeFullscreenPlayer: UIViewControllerRepresentable {
         controller.showsPlaybackControls = true
         controller.videoGravity = .resizeAspect
         
+        // Enable automatic PiP when swiping to Home (iOS 14.2+)
+        if #available(iOS 14.2, *) {
+            controller.canStartPictureInPictureAutomaticallyFromInline = true
+        }
+        
         // Enable fullscreen behavior
         controller.entersFullScreenWhenPlaybackBegins = false
         controller.exitsFullScreenWhenPlaybackEnds = false
