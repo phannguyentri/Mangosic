@@ -53,6 +53,15 @@ class PlayerViewModel: ObservableObject {
             return
         }
         
+        // Check if video is already playing to avoid reloading
+        if let targetID = YouTubeService.extractVideoID(from: input),
+           let currentTrack = currentTrack,
+           targetID == currentTrack.id {
+            print("▶️ Video \(targetID) is already loaded. Opening player.")
+            showingPlayer = true
+            return
+        }
+        
         isExtracting = true
         
         do {
