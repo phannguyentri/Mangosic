@@ -399,7 +399,7 @@ struct SearchResultRow: View {
     
     var body: some View {
         Button(action: onTap) {
-            HStack(spacing: 14) {
+            HStack(spacing: 10) {
                 // Thumbnail
                 AsyncImage(url: result.thumbnailURL) { phase in
                     switch phase {
@@ -420,7 +420,7 @@ struct SearchResultRow: View {
                         thumbnailPlaceholder
                     }
                 }
-                .frame(width: 120, height: 68)
+                .frame(width: 110, height: 62)
                 .cornerRadius(8)
                 .clipped()
                 
@@ -438,15 +438,26 @@ struct SearchResultRow: View {
                     
                     HStack(spacing: 8) {
                         if let duration = result.duration {
-                            Label(duration, systemImage: "clock")
-                                .font(.caption2)
-                                .foregroundColor(.gray.opacity(0.8))
+                            HStack(spacing: 3) {
+                                Image(systemName: "clock")
+                                    .font(.caption2)
+                                Text(duration)
+                                    .font(.caption2)
+                                    .lineLimit(1)
+                            }
+                            .foregroundColor(.gray.opacity(0.8))
                         }
                         
                         if let viewCount = result.viewCount {
-                            Text(viewCount)
-                                .font(.caption2)
-                                .foregroundColor(.gray.opacity(0.8))
+                            HStack(spacing: 3) {
+                                Image(systemName: "eye.fill")
+                                    .font(.system(size: 10))
+                                Text(viewCount)
+                                    .font(.caption2)
+                                    .lineLimit(1)
+                                    .minimumScaleFactor(0.9)
+                            }
+                            .foregroundColor(.gray.opacity(0.8))
                         }
                     }
                 }

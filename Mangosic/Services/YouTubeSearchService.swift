@@ -239,9 +239,30 @@ class YouTubeSearchService: ObservableObject {
             author: author ?? "Unknown Artist",
             thumbnailURL: thumbnailURL,
             duration: duration,
-            viewCount: viewCount,
+            viewCount: formatViewCountString(viewCount),
             publishedTime: publishedTime
         )
+    }
+    
+    private func formatViewCountString(_ text: String?) -> String? {
+        guard let text = text else { return nil }
+        
+        // Extract digits only
+        let digits = text.components(separatedBy: CharacterSet.decimalDigits.inverted).joined()
+        guard let number = Double(digits) else { return text }
+        
+        if number >= 1_000_000_000 {
+            let formatted = String(format: "%.1fB", number / 1_000_000_000)
+            return formatted.replacingOccurrences(of: ".0B", with: "B")
+        } else if number >= 1_000_000 {
+            let formatted = String(format: "%.1fM", number / 1_000_000)
+            return formatted.replacingOccurrences(of: ".0M", with: "M")
+        } else if number >= 1_000 {
+            let formatted = String(format: "%.1fK", number / 1_000)
+            return formatted.replacingOccurrences(of: ".0K", with: "K")
+        } else {
+            return String(Int(number))
+        }
     }
     
     private func extractText(from data: Any?) -> String? {
