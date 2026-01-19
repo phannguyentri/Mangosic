@@ -86,6 +86,10 @@ class PlayerViewModel: ObservableObject {
             
             isExtracting = false
             playerService.play(track, mode: selectedMode)
+            
+            // Record to recently played history
+            HistoryService.shared.recordPlay(track)
+            
             showingPlayer = true
             urlInput = "" // Clear input on successful load
         } catch {

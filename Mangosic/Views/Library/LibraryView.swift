@@ -203,13 +203,6 @@ struct LibraryView: View {
         playerViewModel.urlInput = play.videoId
         Task {
             await playerViewModel.loadAndPlay()
-            historyService.recordPlay(
-                videoId: play.videoId,
-                title: play.title,
-                author: play.author,
-                thumbnailURL: play.thumbnailURL,
-                duration: play.duration
-            )
         }
     }
 }

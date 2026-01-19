@@ -244,13 +244,6 @@ struct PlaylistDetailView: View {
         
         Task {
             await playerViewModel.loadAndPlay()
-            HistoryService.shared.recordPlay(
-                videoId: track.videoId,
-                title: track.title,
-                author: track.author,
-                thumbnailURL: track.thumbnailURL,
-                duration: track.duration
-            )
         }
     }
     
