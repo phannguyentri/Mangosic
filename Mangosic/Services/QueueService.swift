@@ -19,6 +19,12 @@ final class QueueService: ObservableObject {
     /// Whether shuffle is enabled
     @Published var isShuffleEnabled: Bool = false
     
+    /// Name of the current playlist being played (nil if single track or search result)
+    @Published private(set) var currentPlaylistName: String?
+    
+    /// ID of the current playlist being played (nil if single track or search result)
+    @Published private(set) var currentPlaylistId: UUID?
+    
     /// Original queue order (for unshuffle)
     private var originalQueue: [QueueItem] = []
     
@@ -73,15 +79,33 @@ final class QueueService: ObservableObject {
     
     // MARK: - Queue Management
     
-    /// Set a new queue and start playing from beginning
-    func setQueue(_ items: [QueueItem], startIndex: Int = 0) {
+    /// Set a new queue from a playlist and start playing from specified index
+    /// - Parameters:
+    ///   - items: Queue items to set
+    ///   - startIndex: Index to start playing from
+    ///   - playlistName: Name of the playlist (nil if not from a playlist)
+    ///   - playlistId: ID of the playlist (nil if not from a playlist)
+    func setQueue(_ items: [QueueItem], startIndex: Int = 0, playlistName: String? = nil, playlistId: UUID? = nil) {
         originalQueue = items
         queue = items
         currentIndex = min(startIndex, max(0, items.count - 1))
+        currentPlaylistName = playlistName
+        currentPlaylistId = playlistId
         
         if isShuffleEnabled && !items.isEmpty {
             shuffleQueue(keepCurrent: true)
         }
+    }
+    
+    /// Play a single track (clears existing queue and playlist info)
+    /// Use this when playing from search results or URL input
+    func playSingleTrack(_ item: QueueItem) {
+        originalQueue = [item]
+        queue = [item]
+        currentIndex = 0
+        currentPlaylistName = nil
+        currentPlaylistId = nil
+        isShuffleEnabled = false
     }
     
     /// Add item to end of queue
@@ -207,6 +231,11 @@ final class QueueService: ObservableObject {
         }
     }
     
+    /// Set current index directly (for loop-back scenarios)
+    func setCurrentIndex(_ index: Int) {
+        skipTo(index: index)
+    }
+    
     // MARK: - Shuffle
     
     /// Toggle shuffle mode
@@ -266,13 +295,15 @@ final class QueueService: ObservableObject {
     }
     
     /// Shuffle and replace queue
-    func shuffleAndPlay(_ items: [QueueItem]) {
+    func shuffleAndPlay(_ items: [QueueItem], playlistName: String? = nil, playlistId: UUID? = nil) {
         var shuffled = items
         shuffled.shuffle()
         originalQueue = items
         queue = shuffled
         currentIndex = 0
         isShuffleEnabled = true
+        currentPlaylistName = playlistName
+        currentPlaylistId = playlistId
     }
 }
 

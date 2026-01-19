@@ -235,15 +235,20 @@ struct PlaylistDetailView: View {
     private func playTrack(_ track: PlaylistTrackItem) {
         playerViewModel.urlInput = track.videoId
         
-        // Set up queue with remaining tracks
+        // Set up queue with all tracks from this playlist
         let tracks = sortedTracks
         if let index = tracks.firstIndex(where: { $0.id == track.id }) {
             let queueItems = tracks.map { QueueItem(from: $0) }
-            QueueService.shared.setQueue(queueItems, startIndex: index)
+            QueueService.shared.setQueue(
+                queueItems, 
+                startIndex: index, 
+                playlistName: playlist.name,
+                playlistId: playlist.id
+            )
         }
         
         Task {
-            await playerViewModel.loadAndPlay()
+            await playerViewModel.loadAndPlay(fromPlaylist: true)
         }
     }
     
@@ -256,11 +261,16 @@ struct PlaylistDetailView: View {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         
         let queueItems = sortedTracks.map { QueueItem(from: $0) }
-        QueueService.shared.setQueue(queueItems, startIndex: 0)
+        QueueService.shared.setQueue(
+            queueItems, 
+            startIndex: 0,
+            playlistName: playlist.name,
+            playlistId: playlist.id
+        )
         
         playerViewModel.urlInput = firstTrack.videoId
         Task {
-            await playerViewModel.loadAndPlay()
+            await playerViewModel.loadAndPlay(fromPlaylist: true)
             await MainActor.run {
                 isLoadingPlaylist = false
                 loadingType = nil
@@ -277,12 +287,12 @@ struct PlaylistDetailView: View {
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
         
         let queueItems = sortedTracks.map { QueueItem(from: $0) }
-        QueueService.shared.shuffleAndPlay(queueItems)
+        QueueService.shared.shuffleAndPlay(queueItems, playlistName: playlist.name, playlistId: playlist.id)
         
         if let firstItem = QueueService.shared.currentItem {
             playerViewModel.urlInput = firstItem.videoId
             Task {
-                await playerViewModel.loadAndPlay()
+                await playerViewModel.loadAndPlay(fromPlaylist: true)
                 await MainActor.run {
                     isLoadingPlaylist = false
                     loadingType = nil

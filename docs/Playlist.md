@@ -1,22 +1,22 @@
-# 🎵 Playlist & Queue Feature
+# 🎵 Playlist & Now Playing Feature
 
 ## Overview
 
-The Playlist feature provides comprehensive music queue management and saved playlist functionality for Mangosic. Users can create personal playlists, manage a playback queue, track listening history, and navigate tracks with Previous/Next controls.
+The Playlist feature provides comprehensive music playback management and saved playlist functionality for Mangosic. Users can create personal playlists, view the current playing playlist, track listening history, and navigate tracks with Previous/Next controls.
 
 ## Features
 
 ### Core Features
-- **Queue Management** - Add, remove, and reorder tracks in the current playback queue
+- **Now Playing Playlist** - View all tracks in current playlist, tap any to play
 - **Saved Playlists** - Create, edit, and delete personal playlists
 - **Recently Played** - Automatic tracking of listening history
-- **Shuffle** - Randomize queue order with proper state management
-- **Previous/Next Navigation** - Navigate between tracks in queue
+- **Shuffle** - Randomize playlist order with proper state management
+- **Previous/Next Navigation** - Navigate between tracks in playlist
+- **Auto-Play Next** - Automatically play next track when current finishes
 
 ### User Interactions
-- **Swipe Actions** - Swipe left to delete, swipe right to add to queue
-- **Long Press Menu** - Context menu with options (Add to Queue, Add to Playlist, etc.)
-- **Drag to Reorder** - Drag handle to reorder tracks in queue/playlist
+- **Tap to Play** - Tap any track in Now Playing to play it immediately
+- **Long Press Menu** - Context menu with options (Add to Playlist, Share, etc.)
 - **Double-tap Skip** - Double-tap on video/album art to skip ±10 seconds
 - **Haptic Feedback** - Tactile feedback for all actions
 - **Add Button (+)** - Quick add to playlist from search results and PlayerView
@@ -138,18 +138,18 @@ The app uses a **TabView** with **fullScreenCover** for PlayerView:
 | Home | `house.fill` | Search, URL input, Play button |
 | Library | `music.note.list` | Recently Played, Playlists |
 
-### Queue Access
+### Now Playing Playlist
 
-Users can access the queue from:
-1. **Mini Player (NowPlayingBar)** - Tap queue icon
-2. **Full Player (PlayerView)** - Tap queue icon (≡) in toolbar
+Users can access the current playing playlist from:
+1. **Mini Player (NowPlayingBar)** - Tap playlist icon
+2. **Full Player (PlayerView)** - Tap playlist icon (≡) in toolbar
 
-The queue appears as a **sheet modal** with:
-- "Now Playing" section
-- "Up Next" section
-- Shuffle toggle button
-- Drag-to-reorder
-- Swipe-to-delete
+The Now Playing view appears as a **sheet modal** with:
+- All tracks in the current playlist displayed
+- Current track highlighted with animated bars
+- Shuffle toggle button in toolbar
+- Tap any track to play it immediately
+- Track numbers for easy navigation
 
 ### Library Tab Layout
 

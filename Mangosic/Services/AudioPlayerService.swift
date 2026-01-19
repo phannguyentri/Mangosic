@@ -4,6 +4,13 @@ import MediaPlayer
 import Combine
 import UIKit
 
+/// Notification sent when a track finishes playing naturally (not stopped by user)
+extension Notification.Name {
+    static let trackDidFinishPlaying = Notification.Name("trackDidFinishPlaying")
+    static let remoteNextTrackCommand = Notification.Name("remoteNextTrackCommand")
+    static let remotePreviousTrackCommand = Notification.Name("remotePreviousTrackCommand")
+}
+
 /// Service for managing audio/video playback with AVPlayer
 @MainActor
 class AudioPlayerService: ObservableObject {
@@ -17,6 +24,9 @@ class AudioPlayerService: ObservableObject {
     @Published private(set) var duration: TimeInterval = 0
     @Published private(set) var playbackMode: PlaybackMode = .video
     @Published private(set) var repeatMode: RepeatMode = .off
+    
+    /// Publisher that fires when a track finishes playing naturally
+    let trackEndedPublisher = PassthroughSubject<Void, Never>()
     
     // MARK: - Private Properties
     private var player: AVPlayer?
@@ -82,6 +92,19 @@ class AudioPlayerService: ObservableObject {
             self?.seek(to: event.positionTime)
             return .success
         }
+        
+        // Next/Previous track commands for Control Center, Lock Screen, Bluetooth headphones
+        commandCenter.nextTrackCommand.addTarget { [weak self] _ in
+            // Post notification for PlayerViewModel to handle
+            NotificationCenter.default.post(name: .remoteNextTrackCommand, object: nil)
+            return .success
+        }
+        
+        commandCenter.previousTrackCommand.addTarget { [weak self] _ in
+            // Post notification for PlayerViewModel to handle  
+            NotificationCenter.default.post(name: .remotePreviousTrackCommand, object: nil)
+            return .success
+        }
     }
     
     // MARK: - End of Track Observer
@@ -100,14 +123,26 @@ class AudioPlayerService: ObservableObject {
     private func handleTrackEnded() {
         switch repeatMode {
         case .off:
-            // Just stop at the end
+            // Track ended - notify listeners to play next track in queue
             state = .paused
             currentTime = duration
             updateNowPlayingInfo()
-        case .one, .all:
-            // Replay the current track
+            
+            // Notify that track ended naturally (for auto-play next)
+            trackEndedPublisher.send()
+            NotificationCenter.default.post(name: .trackDidFinishPlaying, object: nil)
+            
+        case .one:
+            // Repeat single track
             seek(to: 0)
             resume()
+            
+        case .all:
+            // Repeat all - first try to play next, if no next track, repeat current
+            // The trackEndedPublisher will handle playing next track
+            // If queue has next, it will play; if not, PlayerViewModel will replay
+            trackEndedPublisher.send()
+            NotificationCenter.default.post(name: .trackDidFinishPlaying, object: nil)
         }
     }
     

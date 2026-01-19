@@ -26,6 +26,11 @@ final class HistoryService: ObservableObject {
     /// Configure with model context (call from App init)
     func configure(with modelContext: ModelContext) {
         self.modelContext = modelContext
+        
+        // Clean up any existing duplicates on startup
+        Task { @MainActor in
+            deduplicateHistory()
+        }
     }
     
     // MARK: - Record Play
@@ -37,18 +42,31 @@ final class HistoryService: ObservableObject {
             return
         }
         
-        // Check if this video was recently played (within last 5 minutes)
-        // to avoid duplicate entries from seeking/restarting
-        let fiveMinutesAgo = Date().addingTimeInterval(-300)
+        // Check if this video is already in history
         let descriptor = FetchDescriptor<RecentPlay>(
-            predicate: #Predicate { $0.videoId == videoId && $0.playedAt > fiveMinutesAgo }
+            predicate: #Predicate { $0.videoId == videoId }
         )
         
         do {
             let existing = try context.fetch(descriptor)
-            if !existing.isEmpty {
-                // Just update the timestamp of existing entry
-                existing.first?.playedAt = Date()
+            
+            if let first = existing.first {
+                // Update timestamp to bring it to top
+                first.playedAt = Date()
+                
+                // Update details in case they changed
+                first.title = title
+                first.author = author
+                first.thumbnailURL = thumbnailURL
+                first.duration = duration
+                
+                // Remove any other duplicates if they exist (cleanup legacy duplicates)
+                if existing.count > 1 {
+                    for i in 1..<existing.count {
+                        context.delete(existing[i])
+                    }
+                }
+                
                 try context.save()
                 return
             }
@@ -206,6 +224,31 @@ final class HistoryService: ObservableObject {
             }
         } catch {
             print("⚠️ HistoryService: Error cleaning up old entries: \(error)")
+        }
+    }
+    
+    /// Deduplicate history entries
+    private func deduplicateHistory() {
+        guard let context = modelContext else { return }
+        
+        var descriptor = FetchDescriptor<RecentPlay>(
+            sortBy: [SortDescriptor(\.playedAt, order: .reverse)]
+        )
+        
+        do {
+            let allPlays = try context.fetch(descriptor)
+            var seenVideoIds = Set<String>()
+            
+            for play in allPlays {
+                if seenVideoIds.contains(play.videoId) {
+                    context.delete(play)
+                } else {
+                    seenVideoIds.insert(play.videoId)
+                }
+            }
+            try context.save()
+        } catch {
+            print("⚠️ HistoryService: Error deduplicating history: \(error)")
         }
     }
 }

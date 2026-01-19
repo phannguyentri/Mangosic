@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Button to show queue from mini player or full player
+/// Button to show now playing playlist from mini player or full player
 struct QueueButton: View {
     @ObservedObject var queueService: QueueService
     @State private var showingQueue = false
@@ -16,8 +16,9 @@ struct QueueButton: View {
                 Image(systemName: "list.bullet")
                     .font(compact ? .caption : .body)
                 
-                if !compact && queueService.remainingCount > 0 {
-                    Text("\(queueService.remainingCount)")
+                // Show total track count badge if there are tracks
+                if !compact && queueService.count > 0 {
+                    Text("\(queueService.count)")
                         .font(.caption.bold())
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
@@ -31,7 +32,7 @@ struct QueueButton: View {
             .cornerRadius(compact ? 8 : 12)
         }
         .sheet(isPresented: $showingQueue) {
-            QueueView(queueService: queueService)
+            NowPlayingView(queueService: queueService)
         }
     }
 }

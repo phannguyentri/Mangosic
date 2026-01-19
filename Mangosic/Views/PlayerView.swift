@@ -225,7 +225,7 @@ struct PlayerView: View {
                 .presentationDragIndicator(.visible)
         }
         .sheet(isPresented: $showingQueue) {
-            QueueView(queueService: QueueService.shared)
+            NowPlayingView(queueService: QueueService.shared)
                 .environmentObject(viewModel)
         }
         .sheet(isPresented: $showingAddToPlaylist) {
@@ -445,26 +445,12 @@ struct PlayerView: View {
     }
     
     private func playPreviousTrack() {
-        guard hasPreviousTrack else { return }
-        queueService.previous()
-        if let item = queueService.currentItem {
-            viewModel.urlInput = item.videoId
-            Task {
-                await viewModel.loadAndPlay()
-            }
-        }
+        viewModel.playPreviousTrack()
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
     
     private func playNextTrack() {
-        guard hasNextTrack else { return }
-        queueService.next()
-        if let item = queueService.currentItem {
-            viewModel.urlInput = item.videoId
-            Task {
-                await viewModel.loadAndPlay()
-            }
-        }
+        viewModel.playNextTrack()
         UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
     

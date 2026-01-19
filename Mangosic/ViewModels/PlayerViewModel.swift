@@ -27,6 +27,87 @@ class PlayerViewModel: ObservableObject {
                 self?.objectWillChange.send()
             }
             .store(in: &cancellables)
+        
+        // Subscribe to track ended events for auto-play next
+        playerService.trackEndedPublisher
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] in
+                self?.handleTrackEnded()
+            }
+            .store(in: &cancellables)
+        
+        // Subscribe to remote control commands (Control Center, Lock Screen, Bluetooth)
+        NotificationCenter.default.publisher(for: .remoteNextTrackCommand)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.playNextTrack()
+            }
+            .store(in: &cancellables)
+        
+        NotificationCenter.default.publisher(for: .remotePreviousTrackCommand)
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] _ in
+                self?.playPreviousTrack()
+            }
+            .store(in: &cancellables)
+    }
+    
+    // MARK: - Auto-Play Next Track
+    
+    /// Called when current track finishes playing
+    private func handleTrackEnded() {
+        let queueService = QueueService.shared
+        let repeatMode = playerService.repeatMode
+        
+        // Check if there's a next track in queue
+        if queueService.hasNext {
+            // Play next track
+            queueService.next()
+            if let nextItem = queueService.currentItem {
+                urlInput = nextItem.videoId
+                Task {
+                    await loadAndPlay(fromPlaylist: true)
+                }
+            }
+        } else if repeatMode == .all && queueService.count > 0 {
+            // Repeat all: loop back to first track
+            queueService.setCurrentIndex(0)
+            if let firstItem = queueService.currentItem {
+                urlInput = firstItem.videoId
+                Task {
+                    await loadAndPlay(fromPlaylist: true)
+                }
+            }
+        }
+        // If repeat mode is .off and no next track, just stay paused (already handled by AudioPlayerService)
+    }
+    
+    /// Play next track in queue (for remote control and UI)
+    func playNextTrack() {
+        let queueService = QueueService.shared
+        guard queueService.hasNext else { return }
+        
+        queueService.next()
+        if let nextItem = queueService.currentItem {
+            urlInput = nextItem.videoId
+            Task {
+                await loadAndPlay(fromPlaylist: true)
+            }
+        }
+    }
+    
+    /// Play previous track in queue (for remote control and UI)
+    func playPreviousTrack() {
+        let queueService = QueueService.shared
+        guard queueService.hasPrevious else { return }
+        
+        queueService.previous()
+        if let prevItem = queueService.currentItem {
+            urlInput = prevItem.videoId
+            Task {
+                await loadAndPlay(fromPlaylist: true)
+            }
+        }
     }
     
     // MARK: - Computed Properties
@@ -45,8 +126,10 @@ class PlayerViewModel: ObservableObject {
     // MARK: - Actions
     
     /// Load and play from URL or video ID
-    /// - Parameter searchResult: Optional search result metadata to use instead of extracting from scratch
-    func loadAndPlay(searchResult: SearchResult? = nil) async {
+    /// - Parameters:
+    ///   - searchResult: Optional search result metadata to use instead of extracting from scratch
+    ///   - fromPlaylist: If true, keeps the current queue; if false, clears queue for single-track playback
+    func loadAndPlay(searchResult: SearchResult? = nil, fromPlaylist: Bool = false) async {
         let input = urlInput.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !input.isEmpty else {
             showError(message: "Please enter a YouTube URL or video ID")
@@ -86,6 +169,12 @@ class PlayerViewModel: ObservableObject {
             
             isExtracting = false
             playerService.play(track, mode: selectedMode)
+            
+            // If playing single track (not from playlist), clear queue and set single item
+            if !fromPlaylist {
+                let queueItem = track.toQueueItem()
+                QueueService.shared.playSingleTrack(queueItem)
+            }
             
             // Record to recently played history
             HistoryService.shared.recordPlay(track)
