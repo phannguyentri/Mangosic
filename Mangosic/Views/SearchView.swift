@@ -486,7 +486,6 @@ struct SearchResultRow: View {
                             Image(systemName: "play.circle.fill")
                                 .font(.system(size: 28))
                                 .foregroundStyle(Theme.primaryGradient)
-                                .opacity(isPressed ? 1 : 0.7)
                         }
                     }
                     .frame(width: 30, height: 30)
