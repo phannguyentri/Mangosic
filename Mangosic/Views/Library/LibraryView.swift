@@ -328,6 +328,7 @@ struct PlaylistRow: View {
         }
         .padding(.horizontal)
         .padding(.vertical, 12)
+        .contentShape(Rectangle())
     }
     
     private var playlistCoverPlaceholder: some View {

@@ -153,12 +153,13 @@ class PlayerViewModel: ObservableObject {
             
             // If we have search result metadata, use it to improve the track info
             if let result = searchResult {
+                let resultTrack = result.toTrack()
                 track = Track(
                     id: track.id,
                     title: result.title,
                     author: result.author,
                     thumbnailURL: result.thumbnailURL ?? track.thumbnailURL, // Prefer search thumbnail
-                    duration: track.duration,
+                    duration: resultTrack.duration ?? track.duration,
                     audioStreamURL: track.audioStreamURL,
                     videoStreamURL: track.videoStreamURL,
                     videoOnlyStreamURL: track.videoOnlyStreamURL,

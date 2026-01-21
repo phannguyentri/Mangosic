@@ -230,8 +230,24 @@ struct PlayerView: View {
         }
         .sheet(isPresented: $showingAddToPlaylist) {
             if let track = viewModel.currentTrack {
+                // Ensure track has duration if available from player
+                let trackToAdd = (track.duration == nil && viewModel.duration > 0)
+                    ? Track(
+                        id: track.id,
+                        title: track.title,
+                        author: track.author,
+                        thumbnailURL: track.thumbnailURL,
+                        duration: viewModel.duration,
+                        audioStreamURL: track.audioStreamURL,
+                        videoStreamURL: track.videoStreamURL,
+                        videoOnlyStreamURL: track.videoOnlyStreamURL,
+                        separateAudioURL: track.separateAudioURL,
+                        resolution: track.resolution
+                    )
+                    : track
+                
                 AddToPlaylistSheet(
-                    track: track,
+                    track: trackToAdd,
                     playlistService: PlaylistService.shared
                 )
             }

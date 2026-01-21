@@ -17,13 +17,32 @@ struct SearchResult: Identifiable, Equatable {
             title: title,
             author: author,
             thumbnailURL: thumbnailURL,
-            duration: nil,
+            duration: parseDuration(duration),
             audioStreamURL: nil,
             videoStreamURL: nil,
             videoOnlyStreamURL: nil,
             separateAudioURL: nil,
             resolution: nil
         )
+    }
+    
+    private func parseDuration(_ durationString: String?) -> TimeInterval? {
+        guard let durationString = durationString else { return nil }
+        
+        // Remove any non-duration characters if necessary (though usually it's just numbers and colons)
+        let cleanString = durationString.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleanString.isEmpty, cleanString != "--:--" else { return nil }
+        
+        let components = cleanString.components(separatedBy: ":")
+        
+        var totalSeconds: TimeInterval = 0
+        for (index, component) in components.reversed().enumerated() {
+            if let value = Double(component) {
+                totalSeconds += value * pow(60, Double(index))
+            }
+        }
+        
+        return totalSeconds > 0 ? totalSeconds : nil
     }
 }
 

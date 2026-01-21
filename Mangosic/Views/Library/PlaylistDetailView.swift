@@ -384,6 +384,7 @@ struct PlaylistTrackRow: View {
             }
             .padding(.horizontal)
             .padding(.vertical, 10)
+            .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
