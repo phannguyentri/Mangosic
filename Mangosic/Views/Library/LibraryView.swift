@@ -210,6 +210,7 @@ struct LibraryView: View {
 // MARK: - Recent Play Card
 
 struct RecentPlayCard: View {
+    @EnvironmentObject var playerViewModel: PlayerViewModel
     let recentPlay: RecentPlay
     let onTap: () -> Void
     
@@ -217,24 +218,37 @@ struct RecentPlayCard: View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 8) {
                 // Thumbnail
-                if let url = recentPlay.thumbnailURL {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(16/9, contentMode: .fill)
-                        default:
-                            thumbnailPlaceholder
+                ZStack {
+                    if let url = recentPlay.thumbnailURL {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(16/9, contentMode: .fill)
+                            default:
+                                thumbnailPlaceholder
+                            }
                         }
-                    }
-                    .frame(width: 140, height: 80)
-                    .cornerRadius(8)
-                    .clipped()
-                } else {
-                    thumbnailPlaceholder
                         .frame(width: 140, height: 80)
                         .cornerRadius(8)
+                        .clipped()
+                    } else {
+                        thumbnailPlaceholder
+                            .frame(width: 140, height: 80)
+                            .cornerRadius(8)
+                    }
+                    
+                    // Loading Overlay
+                    if playerViewModel.isLoading && playerViewModel.urlInput == recentPlay.videoId {
+                        ZStack {
+                            Color.black.opacity(0.6)
+                            ProgressView()
+                                .tint(.white)
+                        }
+                        .frame(width: 140, height: 80)
+                        .cornerRadius(8)
+                    }
                 }
                 
                 // Info
@@ -263,6 +277,7 @@ struct RecentPlayCard: View {
                     .font(.title2)
                     .foregroundColor(.gray.opacity(0.5))
             )
+            .shimmer()
     }
 }
 
@@ -329,6 +344,7 @@ struct PlaylistRow: View {
                     .font(.title3)
                     .foregroundColor(.white.opacity(0.5))
             )
+            .shimmer()
     }
 }
 

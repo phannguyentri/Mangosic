@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		1123CFD02F1E1D4400B04B64 /* NowPlayingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1123CFCF2F1E1D4400B04B64 /* NowPlayingView.swift */; };
+		1123CFD22F20B2AB00B04B64 /* ShimmerEffect.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1123CFD12F20B2AB00B04B64 /* ShimmerEffect.swift */; };
 		116824AC2F166BF500C74966 /* YouTubeKit in Frameworks */ = {isa = PBXBuildFile; productRef = 2D0000090000000000000001 /* YouTubeKit */; };
 		11C567172F1948BE0024BEEF /* MangosicShareExtension.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 11C5670D2F1948BD0024BEEF /* MangosicShareExtension.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		2D0000010000000000000001 /* MangosicApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D0000020000000000000001 /* MangosicApp.swift */; };
@@ -72,6 +73,7 @@
 
 /* Begin PBXFileReference section */
 		1123CFCF2F1E1D4400B04B64 /* NowPlayingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NowPlayingView.swift; sourceTree = "<group>"; };
+		1123CFD12F20B2AB00B04B64 /* ShimmerEffect.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShimmerEffect.swift; sourceTree = "<group>"; };
 		11C5670D2F1948BD0024BEEF /* MangosicShareExtension.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MangosicShareExtension.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		276E4C948303289A30E6AE40 /* FullscreenVideoPlayerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FullscreenVideoPlayerView.swift; path = Mangosic/Views/FullscreenVideoPlayerView.swift; sourceTree = SOURCE_ROOT; };
 		2D0000020000000000000001 /* MangosicApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MangosicApp.swift; sourceTree = "<group>"; };
@@ -189,6 +191,7 @@
 		2D0000050000000000000005 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				1123CFD12F20B2AB00B04B64 /* ShimmerEffect.swift */,
 				1123CFCF2F1E1D4400B04B64 /* NowPlayingView.swift */,
 				2D0000050000000000000020 /* Components */,
 				2D0000050000000000000021 /* Queue */,
@@ -423,6 +426,7 @@
 				2D0000010000000000000029 /* QueueComponents.swift in Sources */,
 				2D0000010000000000000030 /* TrackContextMenu.swift in Sources */,
 				2D0000010000000000000031 /* MainTabView.swift in Sources */,
+				1123CFD22F20B2AB00B04B64 /* ShimmerEffect.swift in Sources */,
 				2D0000010000000000000032 /* LibraryView.swift in Sources */,
 				2D0000010000000000000033 /* RecentlyPlayedListView.swift in Sources */,
 				2D0000010000000000000034 /* PlaylistDetailView.swift in Sources */,

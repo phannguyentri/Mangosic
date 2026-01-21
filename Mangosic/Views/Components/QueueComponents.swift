@@ -73,3 +73,4 @@ struct ShuffleButton: View {
         ShuffleButton(queueService: QueueService.shared)
     }
 }
+

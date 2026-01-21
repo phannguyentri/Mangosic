@@ -210,6 +210,7 @@ struct PlaylistDetailView: View {
                     .font(.system(size: 50))
                     .foregroundColor(.white.opacity(0.5))
             )
+            .shimmer()
     }
     
     private var emptyState: some View {
@@ -315,6 +316,7 @@ struct PlaylistDetailView: View {
 // MARK: - Playlist Track Row
 
 struct PlaylistTrackRow: View {
+    @EnvironmentObject var playerViewModel: PlayerViewModel
     let track: PlaylistTrackItem
     let onTap: () -> Void
     
@@ -327,24 +329,37 @@ struct PlaylistTrackRow: View {
                     .foregroundColor(.gray.opacity(0.5))
                 
                 // Thumbnail
-                if let url = track.thumbnailURL {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        default:
-                            thumbnailPlaceholder
+                ZStack {
+                    if let url = track.thumbnailURL {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            default:
+                                thumbnailPlaceholder
+                            }
                         }
-                    }
-                    .frame(width: 48, height: 48)
-                    .cornerRadius(6)
-                    .clipped()
-                } else {
-                    thumbnailPlaceholder
                         .frame(width: 48, height: 48)
                         .cornerRadius(6)
+                        .clipped()
+                    } else {
+                        thumbnailPlaceholder
+                            .frame(width: 48, height: 48)
+                            .cornerRadius(6)
+                    }
+                    
+                    if playerViewModel.isLoading && playerViewModel.urlInput == track.videoId {
+                        ZStack {
+                            Color.black.opacity(0.6)
+                            ProgressView()
+                                .tint(.white)
+                                .scaleEffect(0.6)
+                        }
+                        .frame(width: 48, height: 48)
+                        .cornerRadius(6)
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
@@ -381,6 +396,7 @@ struct PlaylistTrackRow: View {
                     .font(.caption)
                     .foregroundColor(.gray)
             )
+            .shimmer()
     }
 }
 

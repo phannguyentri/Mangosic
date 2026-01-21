@@ -112,6 +112,7 @@ struct RecentlyPlayedListView: View {
 // MARK: - Recent Play Row
 
 struct RecentPlayRow: View {
+    @EnvironmentObject var playerViewModel: PlayerViewModel
     let recentPlay: RecentPlay
     let onTap: () -> Void
     
@@ -119,24 +120,39 @@ struct RecentPlayRow: View {
         Button(action: onTap) {
             HStack(spacing: 12) {
                 // Thumbnail
-                if let url = recentPlay.thumbnailURL {
-                    AsyncImage(url: url) { phase in
-                        switch phase {
-                        case .success(let image):
-                            image
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                        default:
-                            thumbnailPlaceholder
+                // Thumbnail
+                ZStack {
+                    if let url = recentPlay.thumbnailURL {
+                        AsyncImage(url: url) { phase in
+                            switch phase {
+                            case .success(let image):
+                                image
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                            default:
+                                thumbnailPlaceholder
+                            }
                         }
-                    }
-                    .frame(width: 56, height: 56)
-                    .cornerRadius(8)
-                    .clipped()
-                } else {
-                    thumbnailPlaceholder
                         .frame(width: 56, height: 56)
                         .cornerRadius(8)
+                        .clipped()
+                    } else {
+                        thumbnailPlaceholder
+                            .frame(width: 56, height: 56)
+                            .cornerRadius(8)
+                    }
+                    
+                    // Loading Overlay
+                    if playerViewModel.isLoading && playerViewModel.urlInput == recentPlay.videoId {
+                        ZStack {
+                            Color.black.opacity(0.6)
+                            ProgressView()
+                                .tint(.white)
+                                .scaleEffect(0.8)
+                        }
+                        .frame(width: 56, height: 56)
+                        .cornerRadius(8)
+                    }
                 }
                 
                 VStack(alignment: .leading, spacing: 4) {
@@ -177,6 +193,7 @@ struct RecentPlayRow: View {
                     .font(.caption)
                     .foregroundColor(.gray)
             )
+            .shimmer()
     }
     
     private func timeAgo(_ date: Date) -> String {

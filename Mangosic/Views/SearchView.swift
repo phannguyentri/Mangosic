@@ -411,11 +411,6 @@ struct SearchResultRow: View {
                         thumbnailPlaceholder
                     case .empty:
                         thumbnailPlaceholder
-                            .overlay(
-                                ProgressView()
-                                    .progressViewStyle(CircularProgressViewStyle(tint: .gray))
-                                    .scaleEffect(0.7)
-                            )
                     @unknown default:
                         thumbnailPlaceholder
                     }
@@ -546,6 +541,7 @@ struct SearchResultRow: View {
                 Image(systemName: "music.note")
                     .foregroundColor(.gray.opacity(0.5))
             )
+            .shimmer()
     }
 }
 

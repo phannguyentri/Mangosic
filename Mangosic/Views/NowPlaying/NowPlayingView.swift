@@ -159,7 +159,20 @@ struct NowPlayingView: View {
                 }
                 
                 // Thumbnail
-                thumbnailView(item.thumbnailURL)
+                ZStack {
+                    thumbnailView(item.thumbnailURL)
+                    
+                    if playerViewModel.isLoading && playerViewModel.urlInput == item.videoId {
+                        ZStack {
+                            Color.black.opacity(0.6)
+                            ProgressView()
+                                .tint(.white)
+                                .scaleEffect(0.6)
+                        }
+                        .frame(width: 48, height: 48)
+                        .cornerRadius(6)
+                    }
+                }
                 
                 // Info
                 VStack(alignment: .leading, spacing: 2) {
@@ -226,6 +239,7 @@ struct NowPlayingView: View {
                     .font(.caption)
                     .foregroundColor(.gray)
             )
+            .shimmer()
     }
     
     // MARK: - Actions
